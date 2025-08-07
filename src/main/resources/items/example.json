@@ -1,0 +1,24 @@
+{
+  "cfgver": 1,
+  "name": "example",
+  "disabled": true,
+
+  "onlysneaking": true,
+
+  "dimensions": [
+    "world",
+    "world_nether",
+    "world_the_end"
+  ],
+  "slots": [
+    "helmet",
+    "chestplate",
+    "leggings",
+    "boots",
+    "mainhand",
+    "offhand"
+  ],
+  "effects": {
+    "": {}
+  }
+}

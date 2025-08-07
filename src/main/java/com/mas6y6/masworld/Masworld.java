@@ -1,6 +1,6 @@
 package com.mas6y6.masworld;
 import com.mas6y6.masworld.Commands.FixItems;
-import com.mas6y6.masworld.Registery.Effects;
+import com.mas6y6.masworld.ItemEffects.ItemEffects;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import de.tr7zw.nbtapi.NBT;
 import de.tr7zw.nbtapi.iface.ReadableItemNBT;
@@ -23,6 +23,7 @@ public final class Masworld extends JavaPlugin {
 
     public Configuration config;
     public File itemsDir;
+    public ItemEffects itemeffects;
 
     @Override
     public void onEnable() {
@@ -31,7 +32,7 @@ public final class Masworld extends JavaPlugin {
         saveDefaultConfig();
         config = getConfig();
 
-        String path = config.getString("effects_directory", "effects/");
+        String path = config.getString("items_directory", "items/");
         File dir = new File(path);
         if (!dir.isAbsolute()) {
             dir = new File(getDataFolder(), path);
@@ -45,9 +46,7 @@ public final class Masworld extends JavaPlugin {
             }
         }
 
-        Effects effect_registery = new Effects(this);
-
-        effect_registery.register_all_effects(dir);
+        itemeffects = new ItemEffects(this);
 
         FixItems fixitemsfunctions = new FixItems(this);
 
