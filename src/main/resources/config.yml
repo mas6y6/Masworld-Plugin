@@ -1,0 +1,4 @@
+config:
+  effects_directory: "effects/"
+  default_effect_duration: 999999
+  debug_mode: true

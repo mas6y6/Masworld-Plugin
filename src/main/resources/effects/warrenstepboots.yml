@@ -1,0 +1,23 @@
+cfgver: 1
+effect:
+  name: "Miners light"
+  disabled: false
+  id: 2
+
+  item: "minecraft:leather_boots"
+
+  conditions:
+    only_when_sneaking: false
+    only_in_dimensions:
+      - OVERWORLD
+      - NETHER
+      - THE_END
+
+  effects:
+    jump_boost:
+      amplifier: 5
+      hideparticles: true
+      priority: 1
+
+  slots:
+    - BOOTS

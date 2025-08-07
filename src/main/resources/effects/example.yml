@@ -1,0 +1,32 @@
+cfgver: 1
+effect:
+  name: "Example Effect"
+  disabled: true
+  id: 1
+
+  item: "minecraft:apple"
+
+  conditions:
+    only_when_sneaking: true
+    only_in_dimensions:
+      - OVERWORLD
+      - NETHER
+      - THE_END
+
+  effects:
+    speed:
+      amplifier: 1
+      hideparticles: true
+      priority: 10
+    strength:
+      amplifier: 1
+      hideparticles: true
+      priority: 10
+
+  slots:
+    - MAINHAND
+    - OFFHAND
+    - HELMET
+    - CHESTPLATE
+    - LEGGINGS
+    - BOOTS

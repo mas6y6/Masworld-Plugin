@@ -1,0 +1,25 @@
+cfgver: 1
+effect:
+  name: "Miners light"
+  disabled: false
+  id: 1
+
+  item: "minecraft:soul_lantern"
+
+  conditions:
+    only_when_sneaking: false
+    only_in_dimensions:
+      - OVERWORLD
+      - NETHER
+      - THE_END
+
+  effects:
+    night_vision:
+      amplifier: 1
+      hideparticles: true
+      priority: 1
+
+  slots:
+    - MAINHAND
+    - OFFHAND
+    - HELMET
