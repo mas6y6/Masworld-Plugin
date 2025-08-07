@@ -81,4 +81,9 @@ public class Effects {
             main.getLogger().info("Registered effect: " + name);
         }
     }
+
+    public void register_player(UUID uuid) {
+        EffectPlayer player = new EffectPlayer();
+        this.effectplayer.put(uuid,player);
+    }
 }
