@@ -1,5 +1,7 @@
 {
   "cfgver": 1,
+
+  "id": 1
   "name": "example",
   "disabled": true,
 
@@ -19,6 +21,13 @@
     "offhand"
   ],
   "effects": {
-    "": {}
+    "minecraft:speed": {
+      "amplifier": 1,
+      "priority": 1
+    },
+    "minecraft:jump_boost": {
+      "amplifier": 1,
+      "priority": 1
+    }
   }
 }

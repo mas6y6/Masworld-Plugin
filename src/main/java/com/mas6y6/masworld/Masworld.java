@@ -2,6 +2,7 @@ package com.mas6y6.masworld;
 import com.mas6y6.masworld.Commands.FixItems;
 import com.mas6y6.masworld.ItemEffects.ItemEffects;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
+import com.mojang.brigadier.context.CommandContext;
 import de.tr7zw.nbtapi.NBT;
 import de.tr7zw.nbtapi.iface.ReadableItemNBT;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
@@ -47,11 +48,20 @@ public final class Masworld extends JavaPlugin {
         }
 
         itemeffects = new ItemEffects(this);
+        try {
+            itemeffects.loadEffects(dir);
+        } catch (Exception e) {
+            this.getLogger().severe("Failed to get files for item effects." + e.getMessage());
+            e.printStackTrace();
+            this.getServer().getPluginManager().disablePlugin(this);
+        }
 
         FixItems fixitemsfunctions = new FixItems(this);
 
         this.getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, commands -> {
             LiteralArgumentBuilder<CommandSourceStack> root = Commands.literal("masworld");
+
+            root.then(Commands.literal("reload").executes(this::pluginReload));
 
             LiteralArgumentBuilder<CommandSourceStack> fixitem = Commands.literal("fixitem");
             fixitem.then(Commands.literal("effect").executes(fixitemsfunctions::effect));
@@ -81,6 +91,8 @@ public final class Masworld extends JavaPlugin {
             }));
 
             root.then(fixitem);
+
+            root.then(itemeffects.commands);
             commands.registrar().register(root.build());
         });
 
@@ -92,6 +104,21 @@ public final class Masworld extends JavaPlugin {
 
     @Override
     public void onDisable() {
-        getLogger().info("Shutting down Masworld Handler");
+        getLogger().info("Shutting down Masworld Plugin");
+    }
+
+    public int pluginReload(CommandContext context) {
+        CommandSourceStack source = (CommandSourceStack) context.getSource();
+        getLogger().info("Reloading Masworld Plugin");
+
+        try {
+            this.itemeffects.loadEffects(this.itemsDir);
+        } catch (Exception e) {
+            this.getLogger().severe("Error reloading the ItemEffects: " + e.getMessage());
+            e.printStackTrace();
+        }
+
+        getLogger().info("Reload Complete");
+        return 0;
     }
 }
