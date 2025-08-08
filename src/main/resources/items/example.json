@@ -19,6 +19,13 @@
     "offhand"
   ],
   "effects": {
-    "": {}
+    "minecraft:blindness": {
+      "amplifier": 1,
+      "priority": 1
+    },
+    "minecraft:speed": {
+      "amplifier": 1,
+      "priority": 3
+    }
   }
 }
