@@ -9,13 +9,13 @@ import io.papermc.paper.command.brigadier.Commands;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 public class ItemEffects {
     private final Masworld main;
     public Map<String, EffectRegister> effects = new HashMap<>();
     public LiteralArgumentBuilder<CommandSourceStack> commands = Commands.literal("itemeffects");
+    public PlayerHandler playerhandler = new PlayerHandler();
 
     public ItemEffects(Masworld main) {
         this.main = main;
@@ -43,9 +43,15 @@ public class ItemEffects {
 
     public void registerEffect(EffectRegister effect) {
         this.effects.put(effect.id, effect);
+        main.getLogger().info("Registered \""+effect.name+"\" at "+"\""+effect.id+"\"");
     }
 
     public void modifyEffect(String id, EffectRegister effect) {
         this.effects.replace(id, effect);
+        main.getLogger().info("Modified \""+effect.name+"\"");
+    }
+
+    public List<EffectRegister> getAllEffects() {
+        return new ArrayList<>(effects.values());
     }
 }

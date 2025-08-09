@@ -110,6 +110,9 @@ public final class Masworld extends JavaPlugin {
     public int pluginReload(CommandContext context) {
         CommandSourceStack source = (CommandSourceStack) context.getSource();
         getLogger().info("Reloading Masworld Plugin");
+        if (source.getSender() instanceof Player player) {
+            player.sendMessage(TextSymbols.WARNING.append(Component.text("Masworld Plugin reload in progress. Please wait.")));
+        }
 
         try {
             this.itemeffects.loadEffects(this.itemsDir);
@@ -119,6 +122,9 @@ public final class Masworld extends JavaPlugin {
         }
 
         getLogger().info("Reload Complete");
+        if (source.getSender() instanceof Player player) {
+            player.sendMessage(TextSymbols.SUCCESS.append(Component.text("Reload Complete!")));
+        }
         return 0;
     }
 }
