@@ -47,9 +47,9 @@ public final class Masworld extends JavaPlugin {
             }
         }
 
-        itemeffects = new ItemEffects(this);
+        itemeffects = new ItemEffects(this,dir);
         try {
-            itemeffects.loadEffects(dir);
+            itemeffects.loadEffects();
         } catch (Exception e) {
             this.getLogger().severe("Failed to get files for item effects." + e.getMessage());
             e.printStackTrace();
@@ -115,7 +115,7 @@ public final class Masworld extends JavaPlugin {
         }
 
         try {
-            this.itemeffects.loadEffects(this.itemsDir);
+            this.itemeffects.loadEffects();
         } catch (Exception e) {
             this.getLogger().severe("Error reloading the ItemEffects: " + e.getMessage());
             e.printStackTrace();
