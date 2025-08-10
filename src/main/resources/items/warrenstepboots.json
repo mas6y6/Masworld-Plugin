@@ -1,8 +1,8 @@
 {
   "cfgver": 1,
 
-  "id": 1,
-  "name": "minerslight",
+  "id": 2,
+  "name": "warrenstepboots",
   "disabled": false,
 
   "onlysneaking": false,
@@ -18,8 +18,8 @@
     "offhand"
   ],
   "effects": {
-    "minecraft:night_vision": {
-      "amplifier": 1,
+    "minecraft:jump_boost": {
+      "amplifier": 5,
       "priority": 1
     }
   }

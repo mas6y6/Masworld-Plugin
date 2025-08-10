@@ -2,12 +2,15 @@ package com.mas6y6.masworld.ItemEffects;
 
 import com.mas6y6.masworld.ItemEffects.Objects.EffectObject;
 import com.mas6y6.masworld.ItemEffects.Objects.EffectRegister;
-import com.mas6y6.masworld.Objects.Exceptions.IllegalKeyException;
+import com.mas6y6.masworld.ItemEffects.Objects.FunctionCommands;
 import com.mas6y6.masworld.Masworld;
+import com.mas6y6.masworld.Objects.Utils;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
+import com.mojang.brigadier.tree.LiteralCommandNode;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
+import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.Registry;
 import org.bukkit.entity.Player;
@@ -15,61 +18,60 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
+import org.bukkit.potion.PotionEffectType;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 
 public class ItemEffects {
-    private final Masworld main;
+    public Masworld main;
     public Map<String, EffectRegister> effects = new HashMap<>();
     public LiteralArgumentBuilder<CommandSourceStack> commands = Commands.literal("itemeffects");
+
+    @SuppressWarnings("unused")
     public PlayerHandler playerhandler = new PlayerHandler();
+    // TODO Make this actually useful
+
     public File dir;
+    public FunctionCommands functioncommands;
 
     public ItemEffects(Masworld main, File directory) {
         this.main = main;
         this.dir = directory;
+        this.functioncommands = new FunctionCommands(this);
     }
 
-    public void loadEffects() throws IOException {
+    public void loadEffects() {
         effects = new HashMap<>();
         ObjectMapper mapper = new ObjectMapper();
-        for (File file : dir.listFiles()) {
+
+        File[] files = dir.listFiles();
+        if (files == null) {
+            files = new File[0];  // empty array of File
+        }
+
+        for (File file : files) {
             try {
                 EffectRegister effectregister = mapper.readValue(file, EffectRegister.class);
                 effectregister.path = file.getPath();
-                main.getLogger().info("Registered \""+effectregister.name+"\" at "+"\""+effectregister.id+"\"");
 
                 for (Map.Entry<String, EffectObject> entry : effectregister.effects.entrySet()) {
                     String key = entry.getKey();
+                    EffectObject value = entry.getValue();
+                    value.effectid = key;
 
-                    if (!key.contains(":")) {
-                        throw new IllegalKeyException("Key must contain a namespace");
-                    } else {
-                        String[] parts = key.split(":", 2);
-                        String namespace = parts[0];
-                        String path = parts[1];
+                    NamespacedKey nsKey = Utils.parseNamespacedKey(key);
 
-                        if (namespace.isEmpty() || path.isEmpty()) {
-                            throw new IllegalKeyException("Key must contain a namespace");
-                        }
-                        if (!namespace.matches("[a-z0-9_.-]+")) {
-                            throw new IllegalKeyException("Illegal Key");
-                        }
-                    }
-
-                    if (key.contains(":")) {
-
-                    }
+                    value.effecttype = Registry.MOB_EFFECT.getOrThrow(nsKey); // Will always supply PotionEffectType since the registry is ```Registry<PotionEffectType>```
                 }
 
-
-                effects.put(effectregister.id,effectregister);
-            } catch(Exception e) {
-                this.main.getLogger().severe("Error Registering \"" + file.getName() + "\": " + e.getMessage());
-                e.printStackTrace();
+                if (effectregister.validate()) {
+                    main.getLogger().info("Registered \"" + effectregister.name + "\" at \"" + effectregister.id + "\"");
+                    effects.put(effectregister.id, effectregister);
+                }
+            } catch (Exception e) {
+                main.getLogger().severe(String.format("Failed to register effect from file \"%s\": %s", file.getName(), e.getMessage()));
             }
         }
     }
@@ -115,51 +117,53 @@ public class ItemEffects {
         return null;
     }
 
-
-    public void calculateEffects(Player player) {
+    public List<EffectObject> calculateEffects(Player player) {
         PlayerInventory inventory = player.getInventory();
-        NamespacedKey playerKey = new NamespacedKey(this.main, "masworld_applied_effects");
 
-        PersistentDataContainer container = player.getPersistentDataContainer();
-        List<String> oldEffects = container.get(playerKey, PersistentDataType.LIST.strings());
+        Map<String, ItemStack> slotItems = Map.of(
+                "helmet", inventory.getHelmet(),
+                "chestplate", inventory.getChestplate(),
+                "leggings", inventory.getLeggings(),
+                "boots", inventory.getBoots(),
+                "mainhand", inventory.getItemInMainHand(),
+                "offhand", inventory.getItemInOffHand()
+        );
 
-        String[] itemEffectIds = {
-                getEffectIdAsString(inventory.getHelmet()),
-                getEffectIdAsString(inventory.getChestplate()),
-                getEffectIdAsString(inventory.getLeggings()),
-                getEffectIdAsString(inventory.getBoots()),
-                getEffectIdAsString(inventory.getItemInMainHand()),
-                getEffectIdAsString(inventory.getItemInOffHand())
-        };
+        return slotItems.entrySet().stream()
+            .filter(entry -> entry.getValue() != null && entry.getValue().getType() != Material.AIR) // skip empty/null
+            .map(entry -> {
+                String slotName = entry.getKey();
+                String effectId = getEffectIdAsString(entry.getValue());
+                if (effectId == null) return null;
 
-        Set<String> uniqueEffectIds = Arrays.stream(itemEffectIds)
-                .filter(Objects::nonNull)
-                .collect(Collectors.toSet());
+                EffectRegister reg = getEffect(effectId);
+                if (reg == null || reg.isDisabled()) return null;
 
-        List<EffectRegister> highestPriorityEffects = uniqueEffectIds.stream()
-                .map(this::getEffect)
-                .filter(Objects::nonNull)
-                .map(effectReg -> {
-                    EffectRegister copy = effectReg.copy();
-                    Map.Entry<String, EffectObject> highPriorityEntry = copy.effects.entrySet().stream()
-                            .max(Comparator.comparingInt(e -> e.getValue().priority))
-                            .orElse(null);
+                if (!reg.getSlots().contains(slotName.toLowerCase())) return null;
+                if (reg.isOnlySneaking() && !player.isSneaking()) return null;
+                if (!reg.getDimensions().stream()
+                        .map(Utils::normalizeDimensionName)
+                        .collect(Collectors.toSet())
+                        .contains(Utils.normalizeDimensionName(player.getWorld().getName()))) return null;
 
-                    if (highPriorityEntry != null) {
-                        copy.effects.clear();
-                        copy.effects.put(highPriorityEntry.getKey(), highPriorityEntry.getValue());
-                        return copy;
-                    }
-                    return null;
-                })
-                .filter(Objects::nonNull)
-                .toList();
+                return reg.effects.values(); // Collection<EffectObject>
+            })
+            .filter(Objects::nonNull)
+            .flatMap(Collection::stream)
+            .collect(Collectors.toMap(
+                    EffectObject::getEffectid,
+                    e -> e,
+                    (e1, e2) -> e1.getPriority() >= e2.getPriority() ? e1 : e2
+            ))
+            .values().stream()
+            .toList();
+    }
 
-        // At this point, highestPriorityEffects contains only the best effects per item
-        // TODO: Apply these effects to the player, replacing oldEffects if needed
+    public LiteralArgumentBuilder<CommandSourceStack> buildCommands() {
+        // TODO Make commands
 
-        if (oldEffects != null) {
+        commands.then(Commands.literal("geteffectdata").executes(functioncommands::geteffectsdata));
 
-        }
+        return commands;
     }
 }

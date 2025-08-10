@@ -1,6 +1,7 @@
 package com.mas6y6.masworld;
 import com.mas6y6.masworld.Commands.FixItems;
 import com.mas6y6.masworld.ItemEffects.ItemEffects;
+import com.mas6y6.masworld.Objects.TextSymbols;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
 import de.tr7zw.nbtapi.NBT;
@@ -92,7 +93,7 @@ public final class Masworld extends JavaPlugin {
 
             root.then(fixitem);
 
-            root.then(itemeffects.commands);
+            root.then(itemeffects.buildCommands());
             commands.registrar().register(root.build());
         });
 

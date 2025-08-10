@@ -4,7 +4,7 @@
     <groupId>com.mas6y6</groupId>
     <artifactId>masworld</artifactId>
     <name>masworld</name>
-    <version>1.0-SNAPSHOT</version>
+    <version>1.5.1-ALPHA</version>
     <build>
         <defaultGoal>clean package</defaultGoal>
         <resources>

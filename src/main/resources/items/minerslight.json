@@ -2,10 +2,10 @@
   "cfgver": 1,
 
   "id": 1,
-  "name": "minerslight",
-  "disabled": false,
+  "name": "example",
+  "disabled": true,
 
-  "onlysneaking": false,
+  "onlysneaking": true,
 
   "dimensions": [
     "world",
@@ -14,11 +14,18 @@
   ],
   "slots": [
     "helmet",
+    "chestplate",
+    "leggings",
+    "boots",
     "mainhand",
     "offhand"
   ],
   "effects": {
-    "minecraft:night_vision": {
+    "minecraft:speed": {
+      "amplifier": 1,
+      "priority": 1
+    },
+    "minecraft:jump_boost": {
       "amplifier": 1,
       "priority": 1
     }
