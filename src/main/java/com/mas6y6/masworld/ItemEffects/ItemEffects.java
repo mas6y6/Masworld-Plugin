@@ -29,10 +29,6 @@ public class ItemEffects {
     public Map<String, EffectRegister> effects = new HashMap<>();
     public LiteralArgumentBuilder<CommandSourceStack> commands = Commands.literal("itemeffects");
 
-    @SuppressWarnings("unused")
-    public PlayerHandler playerhandler = new PlayerHandler();
-    // TODO Make this actually useful
-
     public File dir;
     public FunctionCommands functioncommands;
 
