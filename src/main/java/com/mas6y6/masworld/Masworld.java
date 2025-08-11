@@ -1,22 +1,31 @@
 package com.mas6y6.masworld;
 import com.mas6y6.masworld.Commands.FixItems;
+import com.mas6y6.masworld.EconomySystem.EconomySystem;
 import com.mas6y6.masworld.ItemEffects.ItemEffects;
 import com.mas6y6.masworld.Objects.TextSymbols;
+import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
 import de.tr7zw.nbtapi.NBT;
 import de.tr7zw.nbtapi.iface.ReadableItemNBT;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
+import io.papermc.paper.datacomponent.item.CustomModelData;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
+import org.bukkit.Color;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.inventory.meta.components.CustomModelDataComponent;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.configuration.Configuration;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
+import java.util.List;
+import java.util.Map;
 import java.util.function.Function;
 
 import static net.kyori.adventure.text.format.NamedTextColor.*;
@@ -26,6 +35,7 @@ public final class Masworld extends JavaPlugin {
     public Configuration config;
     public File itemsDir;
     public ItemEffects itemeffects;
+    public EconomySystem econamy;
 
     @Override
     public void onEnable() {
@@ -58,6 +68,7 @@ public final class Masworld extends JavaPlugin {
         }
 
         FixItems fixitemsfunctions = new FixItems(this);
+        EconomySystem econamy = new EconomySystem(this);
 
         this.getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, commands -> {
             LiteralArgumentBuilder<CommandSourceStack> root = Commands.literal("masworld");
@@ -125,6 +136,12 @@ public final class Masworld extends JavaPlugin {
         } catch (Exception e) {
             this.getLogger().severe("Error reloading the ItemEffects: " + e.getMessage());
             e.printStackTrace();
+        }
+
+        for (Player player : getServer().getOnlinePlayers()) {
+            if (player.hasPermission("masworld.itemeffect")) {
+                this.itemeffects.applyEffects(player);
+            }
         }
 
         getLogger().info("Reload Complete");

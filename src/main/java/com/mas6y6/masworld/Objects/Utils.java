@@ -1,9 +1,16 @@
 package com.mas6y6.masworld.Objects;
 
 import com.mas6y6.masworld.Objects.Exceptions.IllegalKeyException;
+import org.bukkit.Bukkit;
 import org.bukkit.NamespacedKey;
+import org.bukkit.Registry;
+import org.bukkit.World;
+import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.potion.PotionEffectType;
 
+import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 
 public class Utils {
     public static NamespacedKey parseNamespacedKey(String key) {
@@ -39,5 +46,20 @@ public class Utils {
         if (dim.contains("world")) return "overworld";
 
         return dim;
+    }
+
+    public static List<String> getAllPotionsKeys() {
+        List<PotionEffectType> effects = Registry.EFFECT.keyStream()
+                .map(Registry.EFFECT::get)
+                .filter(Objects::nonNull)
+                .toList();
+
+        return effects.stream()
+                .map(effect -> effect.getKey().toString())
+                .toList();
+    }
+
+    public static List<String> getDimensions() {
+        return Bukkit.getWorlds().stream().map(World::getName).toList();
     }
 }

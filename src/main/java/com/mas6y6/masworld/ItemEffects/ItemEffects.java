@@ -1,19 +1,21 @@
 package com.mas6y6.masworld.ItemEffects;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
-import com.mas6y6.masworld.ItemEffects.Objects.EffectObject;
+import com.mas6y6.masworld.ItemEffects.Objects.EffectData;
 import com.mas6y6.masworld.ItemEffects.Objects.EffectRegister;
 import com.mas6y6.masworld.ItemEffects.Objects.FunctionCommands;
 import com.mas6y6.masworld.Masworld;
-import com.mas6y6.masworld.Objects.TextSymbols;
 import com.mas6y6.masworld.Objects.Utils;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.mojang.brigadier.arguments.BoolArgumentType;
+import com.mojang.brigadier.arguments.IntegerArgumentType;
+import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.Registry;
@@ -25,7 +27,10 @@ import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.potion.PotionEffectType;
 
 import java.io.File;
+import java.io.IOException;
 import java.lang.reflect.Type;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -36,6 +41,8 @@ public class ItemEffects {
 
     public File dir;
     public FunctionCommands functioncommands;
+
+    public Integer cfgver = 1;
 
     public ItemEffects(Masworld main, File directory) {
         this.main = main;
@@ -59,9 +66,9 @@ public class ItemEffects {
                 EffectRegister effectregister = mapper.readValue(file, EffectRegister.class);
                 effectregister.path = file.getPath();
 
-                for (Map.Entry<String, EffectObject> entry : effectregister.effects.entrySet()) {
+                for (Map.Entry<String, EffectData> entry : effectregister.effects.entrySet()) {
                     String key = entry.getKey();
-                    EffectObject value = entry.getValue();
+                    EffectData value = entry.getValue();
                     value.effectid = key;
 
                     NamespacedKey nsKey = Utils.parseNamespacedKey(key);
@@ -120,7 +127,7 @@ public class ItemEffects {
         return null;
     }
 
-    public List<EffectObject> calculateEffects(Player player) {
+    public List<EffectData> calculateEffects(Player player) {
         PlayerInventory inventory = player.getInventory();
 
         Map<String, ItemStack> slotItems = Map.of(
@@ -154,7 +161,7 @@ public class ItemEffects {
             .filter(Objects::nonNull)
             .flatMap(Collection::stream)
             .collect(Collectors.toMap(
-                    EffectObject::getEffectid,
+                    EffectData::getEffectid,
                     e -> e,
                     (e1, e2) -> e1.getPriority() >= e2.getPriority() ? e1 : e2
             ))
@@ -166,15 +173,259 @@ public class ItemEffects {
         // TODO Make commands
 
         commands.then(Commands.literal("geteffectdata").executes(functioncommands::getEffectsDataCommand));
-        commands.then(Commands.literal("applyeffect").executes(functioncommands::applyEffectsCommannd));
+        commands.then(Commands.literal("applyeffect").executes(functioncommands::applyEffectsCommand));
+
+        commands.then(Commands.literal("create_register")
+                .then(Commands.argument("id",StringArgumentType.word())
+                        .then(Commands.argument("name",StringArgumentType.word())
+                                .executes(functioncommands::createEffectRegistery)
+                        )
+                )
+        );
+
+        commands.then(Commands.literal("remove_register")
+                .then(Commands.argument("id",StringArgumentType.word())
+                        .executes(functioncommands::removeEffectRegisteryConfirm)
+                        .then(Commands.literal("confirm")
+                                .executes(functioncommands::removeEffectRegistery)
+                        )
+                )
+        );
+
+        commands.then(Commands.literal("listactive").executes(functioncommands::listActive));
+
+        commands.then(Commands.literal("getinfo")
+                .then(Commands.argument("id",StringArgumentType.word()).suggests(
+                        (context, builder) -> {
+                            List<String> options = getEffectIds();
+                            for (String option : options) {
+                                if (option.startsWith(builder.getRemainingLowerCase())) {
+                                    builder.suggest(option);
+                                }
+                            }
+                            return builder.buildFuture();
+                        })
+                        .executes(functioncommands::getInfo)
+                )
+        );
+
+        commands.then(Commands.literal("listslots")
+                .then(Commands.argument("id",StringArgumentType.word()).suggests((context, builder) -> {
+                            List<String> options = getEffectIds();
+                            for (String option : options) {
+                                if (option.startsWith(builder.getRemainingLowerCase())) {
+                                    builder.suggest(option);
+                                }
+                            }
+                            return builder.buildFuture();
+                        })
+                        .executes(functioncommands::listSlots)
+                )
+        );
+
+        commands.then(Commands.literal("add_potion")
+                .then(Commands.argument("id", StringArgumentType.word())
+                        .suggests((context, builder) -> {
+                            List<String> options = getEffectIds();
+                            for (String option : options) {
+                                if (option.startsWith(builder.getRemainingLowerCase())) {
+                                    builder.suggest(option);
+                                }
+                            }
+                            return builder.buildFuture();
+                        })
+                        .then(Commands.argument("potion", StringArgumentType.word())
+                                .suggests((context, builder) -> {
+                                    List<String> options = Utils.getAllPotionsKeys();
+                                    for (String option : options) {
+                                        if (option.startsWith(builder.getRemainingLowerCase())) {
+                                            builder.suggest(option);
+                                        }
+                                    }
+                                    return builder.buildFuture();
+                                })
+                                .then(Commands.argument("amplifier", IntegerArgumentType.integer(1, 255))
+                                        .then(Commands.argument("priority", IntegerArgumentType.integer(0, Integer.MAX_VALUE))
+                                                .executes(functioncommands::addPotionToRegister)
+                                        )
+                                )
+                        )
+                )
+        );
+
+
+        commands.then(Commands.literal("add_slot")
+                .then(Commands.argument("id", StringArgumentType.word())
+                        .suggests((context, builder) -> {
+                            List<String> options = getEffectIds();
+                            for (String option : options) {
+                                if (option.startsWith(builder.getRemainingLowerCase())) {
+                                    builder.suggest(option);
+                                }
+                            }
+                            return builder.buildFuture();
+                        })
+                        .then(Commands.argument("slot", StringArgumentType.word())
+                                .suggests((context, builder) -> {
+                                    List<String> options = List.of("helmet", "chestplate", "leggings", "boots", "mainhand", "offhand");
+                                    for (String option : options) {
+                                        if (option.startsWith(builder.getRemainingLowerCase())) {
+                                            builder.suggest(option);
+                                        }
+                                    }
+                                    return builder.buildFuture();
+                                })
+                                .executes(functioncommands::addSlotToRegister)
+                        )
+                )
+        );
+
+
+        commands.then(Commands.literal("remove_slot")
+                .then(Commands.argument("id", StringArgumentType.word())
+                        .suggests((context, builder) -> {
+                            List<String> options = getEffectIds();
+                            for (String option : options) {
+                                if (option.startsWith(builder.getRemainingLowerCase())) {
+                                    builder.suggest(option);
+                                }
+                            }
+                            return builder.buildFuture();
+                        })
+                        .then(Commands.argument("slot", StringArgumentType.word())
+                                .suggests((context, builder) -> {
+                                    List<String> options = List.of("helmet", "chestplate", "leggings", "boots", "mainhand", "offhand");
+                                    for (String option : options) {
+                                        if (option.startsWith(builder.getRemainingLowerCase())) {
+                                            builder.suggest(option);
+                                        }
+                                    }
+                                    return builder.buildFuture();
+                                })
+                                .executes(functioncommands::removeSlotFromRegister)
+                        )
+                )
+        );
+
+        commands.then(Commands.literal("add_dimension")
+                .then(Commands.argument("id", StringArgumentType.word())
+                        .suggests((context, builder) -> {
+                            List<String> options = getEffectIds();
+                            for (String option : options) {
+                                if (option.startsWith(builder.getRemainingLowerCase())) {
+                                    builder.suggest(option);
+                                }
+                            }
+                            return builder.buildFuture();
+                        })
+                        .then(Commands.argument("dimension", StringArgumentType.word())
+                                .suggests((context, builder) -> {
+                                    List<String> options = Utils.getDimensions();
+                                    for (String option : options) {
+                                        if (option.startsWith(builder.getRemainingLowerCase())) {
+                                            builder.suggest(option);
+                                        }
+                                    }
+                                    return builder.buildFuture();
+                                })
+                                .executes(functioncommands::addDimensionsToRegister)
+                        )
+                )
+        );
+
+        commands.then(Commands.literal("remove_dimension")
+                .then(Commands.argument("id", StringArgumentType.word())
+                        .suggests((context, builder) -> {
+                            List<String> options = getEffectIds();
+                            for (String option : options) {
+                                if (option.startsWith(builder.getRemainingLowerCase())) {
+                                    builder.suggest(option);
+                                }
+                            }
+                            return builder.buildFuture();
+                        })
+                        .then(Commands.argument("dimension", StringArgumentType.word())
+                                .suggests((context, builder) -> {
+                                    List<String> options = Utils.getDimensions();
+                                    for (String option : options) {
+                                        if (option.startsWith(builder.getRemainingLowerCase())) {
+                                            builder.suggest(option);
+                                        }
+                                    }
+                                    return builder.buildFuture();
+                                })
+                                .executes(functioncommands::removeDimensionsFromRegister)
+                        )
+                )
+        );
+
+        commands.then(Commands.literal("remove_potion")
+                .then(Commands.argument("id", StringArgumentType.word())
+                        .suggests((context, builder) -> {
+                            List<String> options = getEffectIds();
+                            for (String option : options) {
+                                if (option.startsWith(builder.getRemainingLowerCase())) {
+                                    builder.suggest(option);
+                                }
+                            }
+                            return builder.buildFuture();
+                        })
+                        .then(Commands.argument("potion", StringArgumentType.word())
+                                .suggests((context, builder) -> {
+                                    List<String> options = Utils.getAllPotionsKeys();
+                                    for (String option : options) {
+                                        if (option.startsWith(builder.getRemainingLowerCase())) {
+                                            builder.suggest(option);
+                                        }
+                                    }
+                                    return builder.buildFuture();
+                                })
+                                .executes(functioncommands::removePotionFromRegister)
+                        )
+                )
+        );
+
+        commands.then(Commands.literal("set_disabled")
+                .then(Commands.argument("id", StringArgumentType.word())
+                        .suggests((context, builder) -> {
+                            List<String> options = getEffectIds();
+                            for (String option : options) {
+                                if (option.startsWith(builder.getRemainingLowerCase())) {
+                                    builder.suggest(option);
+                                }
+                            }
+                            return builder.buildFuture();
+                        })
+                        .then(Commands.argument("disabled", BoolArgumentType.bool())
+                                .executes(functioncommands::setDisabled)
+                        )
+                )
+        );
+
+        commands.then(Commands.literal("set_sneakonly")
+                .then(Commands.argument("id", StringArgumentType.word())
+                        .suggests((context, builder) -> {
+                            List<String> options = getEffectIds();
+                            for (String option : options) {
+                                if (option.startsWith(builder.getRemainingLowerCase())) {
+                                    builder.suggest(option);
+                                }
+                            }
+                            return builder.buildFuture();
+                        })
+                        .then(Commands.argument("onlysneak", BoolArgumentType.bool())
+                                .executes(functioncommands::setSneakonly)
+                        )
+                )
+        );
 
         return commands;
     }
 
-    public List<EffectObject> applyEffects(Player player) {
+    public List<EffectData> applyEffects(Player player) {
         PersistentDataContainer pdc = player.getPersistentDataContainer();
 
-        List<EffectObject> applylist = this.calculateEffects(player);
+        List<EffectData> applylist = this.calculateEffects(player);
 
         NamespacedKey itemeffectskey = new NamespacedKey(this.main, "masworld_itemapplied_effects");
 
@@ -185,7 +436,7 @@ public class ItemEffects {
         Map<String, Integer> oldEffectsMap = json == null ? new HashMap<>() : gson.fromJson(json, type);
 
         Map<String, Integer> newEffectsMap = new HashMap<>();
-        for (EffectObject effect : applylist) {
+        for (EffectData effect : applylist) {
             newEffectsMap.put(effect.getEffectid(), effect.getAmplifier());
         }
 
@@ -198,7 +449,7 @@ public class ItemEffects {
             }
         }
 
-        for (EffectObject effect : applylist) {
+        for (EffectData effect : applylist) {
             PotionEffectType typeToApply = Registry.EFFECT.get(Utils.parseNamespacedKey(effect.getEffectid()));
             if (typeToApply != null) {
                 player.addPotionEffect(effect.buildPotion());
@@ -209,4 +460,43 @@ public class ItemEffects {
 
         return applylist;
     }
+
+    public String saveToFile(EffectRegister effectRegister) throws IOException {
+        if (effectRegister.getPath() == null || effectRegister.getPath().isEmpty()) {
+            throw new IllegalArgumentException("EffectRegister.path is not set");
+        }
+
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
+        mapper.configure(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS, true);
+
+        String json = mapper.writerWithDefaultPrettyPrinter()
+                .writeValueAsString(effectRegister);
+
+        Path filePath = Path.of(effectRegister.getPath());
+        Files.writeString(filePath, json);
+
+        for (Player player : this.main.getServer().getOnlinePlayers()) {
+            this.applyEffects(player);
+        }
+
+        return json;
+    }
+
+    public void reloadPlayerEffects() {
+        for (Player player : this.main.getServer().getOnlinePlayers()) {
+            this.applyEffects(player);
+        }
+    }
 }
+
+/*
+.suggests((context, builder) -> {
+                    List<String> options = List.of("option1", "option2", "option3");
+                    for (String option : options) {
+                        if (option.startsWith(builder.getRemainingLowerCase())) {
+                            builder.suggest(option);
+                        }
+                    }
+                    return builder.buildFuture();
+                })*/

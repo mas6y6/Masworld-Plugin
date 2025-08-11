@@ -1,7 +1,13 @@
 package com.mas6y6.masworld.ItemEffects.Objects;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+
 import java.util.*;
 
+
+@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonPropertyOrder({ "cfgver", "id", "name", "disabled", "onlysneaking", "dimensions", "slots", "effects" })
 public class EffectRegister {
     public int cfgver;
     public String id;
@@ -10,7 +16,7 @@ public class EffectRegister {
     public boolean onlysneaking;
     public List<String> dimensions;
     public List<String> slots;
-    public Map<String, EffectObject> effects;
+    public Map<String, EffectData> effects;
     public transient String path;
 
     public boolean validate() {
@@ -23,7 +29,7 @@ public class EffectRegister {
         if (effects == null || effects.isEmpty()) throw new IllegalStateException("effects cannot be null or empty");
 
         // Optional: validate entries inside effects
-        for (Map.Entry<String, EffectObject> entry : effects.entrySet()) {
+        for (Map.Entry<String, EffectData> entry : effects.entrySet()) {
             if (entry.getKey() == null || entry.getKey().isEmpty()) {
                 throw new IllegalStateException("effects contains null or empty key");
             }
@@ -34,7 +40,6 @@ public class EffectRegister {
 
         return true;
     }
-
 
     public int getCfgver() {
         return cfgver;
@@ -60,7 +65,7 @@ public class EffectRegister {
         return dimensions;
     }
 
-    public Map<String, EffectObject> getEffects() {
+    public Map<String, EffectData> getEffects() {
         return effects;
     }
 
@@ -87,11 +92,11 @@ public class EffectRegister {
         copy.slots = (this.slots != null) ? new ArrayList<>(this.slots) : null;
 
         if (this.effects != null) {
-            Map<String, EffectObject> effectsCopy = new HashMap<>();
-            for (Map.Entry<String, EffectObject> entry : this.effects.entrySet()) {
-                EffectObject originalEffect = entry.getValue();
+            Map<String, EffectData> effectsCopy = new HashMap<>();
+            for (Map.Entry<String, EffectData> entry : this.effects.entrySet()) {
+                EffectData originalEffect = entry.getValue();
                 if (originalEffect != null) {
-                    EffectObject effectCopy = new EffectObject();
+                    EffectData effectCopy = new EffectData();
                     effectCopy.amplifier = originalEffect.amplifier;
                     effectCopy.priority = originalEffect.priority;
                     effectsCopy.put(entry.getKey(), effectCopy);

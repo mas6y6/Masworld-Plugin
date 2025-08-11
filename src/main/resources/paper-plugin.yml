@@ -1,11 +1,15 @@
 name: masworld
-version: '1.6.4'
+version: '1.7.2'
 main: com.mas6y6.masworld.Masworld
 api-version: '1.21'
 description: Masworld SMP Custom Item Handler Plugin
 dependencies:
   server:
     NBTAPI:
+      load: BEFORE
+      required: true
+      join-classpath: true
+    Vault:
       load: BEFORE
       required: true
       join-classpath: true
@@ -24,4 +28,12 @@ permissions:
 
   masworld.itemeffects.debug:
     description: Allows the player to use the debug commands
+    default: op
+
+  masworld.debug:
+    description: Add CustomModelData to item
+    default: op
+
+  masworld.itemeffects.editor:
+    description: Allows you to make EffectRegisteries
     default: op

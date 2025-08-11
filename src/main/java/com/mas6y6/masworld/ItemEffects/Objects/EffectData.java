@@ -1,9 +1,13 @@
 package com.mas6y6.masworld.ItemEffects.Objects;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
-public class EffectObject {
+@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonPropertyOrder({ "amplifier", "priority" })
+public class EffectData {
     public int amplifier;
     public int priority;
     public transient String effectid;
