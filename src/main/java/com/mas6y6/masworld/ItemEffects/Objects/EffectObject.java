@@ -31,13 +31,13 @@ public class EffectObject {
         return this.effecttype;
     }
 
-    public PotionEffect builtPotion() {
+    public PotionEffect buildPotion() {
         if (effecttype == null) {
             throw new IllegalStateException("Effect type is not set for effect: " + effectid);
         }
 
-        int defaultDurationTicks = 20 * 60;
+        int infiniteTicks = Integer.MAX_VALUE;
 
-        return new PotionEffect(effecttype, defaultDurationTicks, amplifier);
+        return new PotionEffect(effecttype, infiniteTicks, amplifier);
     }
 }
