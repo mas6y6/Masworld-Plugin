@@ -1,5 +1,5 @@
 name: masworld
-version: '1.5.1-SNAPSHOT'
+version: '1.6.4'
 main: com.mas6y6.masworld.Masworld
 api-version: '1.21'
 description: Masworld SMP Custom Item Handler Plugin
@@ -16,4 +16,12 @@ permissions:
 
   masworld.admin:
     description: Allows the player to use admin commands
+    default: op
+
+  masworld.itemeffects:
+    description: Allow the player to use the ItemEffects system
+    default-permission: true
+
+  masworld.itemeffects.debug:
+    description: Allows the player to use the debug commands
     default: op

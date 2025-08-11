@@ -1,15 +1,19 @@
 package com.mas6y6.masworld.ItemEffects;
 
+import com.google.common.reflect.TypeToken;
+import com.google.gson.Gson;
 import com.mas6y6.masworld.ItemEffects.Objects.EffectObject;
 import com.mas6y6.masworld.ItemEffects.Objects.EffectRegister;
 import com.mas6y6.masworld.ItemEffects.Objects.FunctionCommands;
 import com.mas6y6.masworld.Masworld;
+import com.mas6y6.masworld.Objects.TextSymbols;
 import com.mas6y6.masworld.Objects.Utils;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
-import com.mojang.brigadier.tree.LiteralCommandNode;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.Registry;
@@ -21,6 +25,7 @@ import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.potion.PotionEffectType;
 
 import java.io.File;
+import java.lang.reflect.Type;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -36,6 +41,8 @@ public class ItemEffects {
         this.main = main;
         this.dir = directory;
         this.functioncommands = new FunctionCommands(this);
+
+        main.getServer().getPluginManager().registerEvents(new Listeners(this), this.main);
     }
 
     public void loadEffects() {
@@ -158,8 +165,48 @@ public class ItemEffects {
     public LiteralArgumentBuilder<CommandSourceStack> buildCommands() {
         // TODO Make commands
 
-        commands.then(Commands.literal("geteffectdata").executes(functioncommands::geteffectsdata));
+        commands.then(Commands.literal("geteffectdata").executes(functioncommands::getEffectsDataCommand));
+        commands.then(Commands.literal("applyeffect").executes(functioncommands::applyEffectsCommannd));
 
         return commands;
+    }
+
+    public List<EffectObject> applyEffects(Player player) {
+        PersistentDataContainer pdc = player.getPersistentDataContainer();
+
+        List<EffectObject> applylist = this.calculateEffects(player);
+
+        NamespacedKey itemeffectskey = new NamespacedKey(this.main, "masworld_itemapplied_effects");
+
+        Gson gson = new Gson();
+        Type type = new TypeToken<Map<String, Integer>>() {}.getType();
+
+        String json = pdc.get(itemeffectskey, PersistentDataType.STRING);
+        Map<String, Integer> oldEffectsMap = json == null ? new HashMap<>() : gson.fromJson(json, type);
+
+        Map<String, Integer> newEffectsMap = new HashMap<>();
+        for (EffectObject effect : applylist) {
+            newEffectsMap.put(effect.getEffectid(), effect.getAmplifier());
+        }
+
+        for (String oldEffectId : oldEffectsMap.keySet()) {
+            if (!newEffectsMap.containsKey(oldEffectId)) {
+                PotionEffectType typeToRemove = Registry.EFFECT.get(Utils.parseNamespacedKey(oldEffectId));
+                if (typeToRemove != null) {
+                    player.removePotionEffect(typeToRemove);
+                }
+            }
+        }
+
+        for (EffectObject effect : applylist) {
+            PotionEffectType typeToApply = Registry.EFFECT.get(Utils.parseNamespacedKey(effect.getEffectid()));
+            if (typeToApply != null) {
+                player.addPotionEffect(effect.buildPotion());
+            }
+        }
+
+        pdc.set(itemeffectskey, PersistentDataType.STRING, gson.toJson(newEffectsMap));
+
+        return applylist;
     }
 }

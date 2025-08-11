@@ -38,6 +38,6 @@ public class EffectObject {
 
         int infiniteTicks = Integer.MAX_VALUE;
 
-        return new PotionEffect(effecttype, infiniteTicks, amplifier);
+        return new PotionEffect(effecttype, infiniteTicks, amplifier, false, false, false);
     }
 }

@@ -10,6 +10,7 @@ import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -18,8 +19,7 @@ import org.bukkit.configuration.Configuration;
 import java.io.File;
 import java.util.function.Function;
 
-import static net.kyori.adventure.text.format.NamedTextColor.GREEN;
-import static net.kyori.adventure.text.format.NamedTextColor.RED;
+import static net.kyori.adventure.text.format.NamedTextColor.*;
 
 public final class Masworld extends JavaPlugin {
 
@@ -99,8 +99,13 @@ public final class Masworld extends JavaPlugin {
 
         getLogger().info("Registered Commands");
 
-        getServer().getPluginManager().registerEvents(new Listeners(this), this);
-        getLogger().info("Registered Listeners");
+        getServer().getScheduler().runTaskTimer(this,() -> {
+            for (Player player : getServer().getOnlinePlayers()) {
+                if (player.hasPermission("masworld.itemeffect")) {
+                    this.itemeffects.applyEffects(player);
+                }
+            }
+        }, 0L,20L);
     }
 
     @Override
@@ -112,7 +117,7 @@ public final class Masworld extends JavaPlugin {
         CommandSourceStack source = (CommandSourceStack) context.getSource();
         getLogger().info("Reloading Masworld Plugin");
         if (source.getSender() instanceof Player player) {
-            player.sendMessage(TextSymbols.WARNING.append(Component.text("Masworld Plugin reload in progress. Please wait.")));
+            player.sendMessage(TextSymbols.WARNING.append(Component.text("Reloading Masworld").color(YELLOW)));
         }
 
         try {
@@ -124,7 +129,7 @@ public final class Masworld extends JavaPlugin {
 
         getLogger().info("Reload Complete");
         if (source.getSender() instanceof Player player) {
-            player.sendMessage(TextSymbols.SUCCESS.append(Component.text("Reload Complete!")));
+            player.sendMessage(TextSymbols.SUCCESS.append(Component.text("Reload Complete!").color(GREEN)));
         }
         return 0;
     }
