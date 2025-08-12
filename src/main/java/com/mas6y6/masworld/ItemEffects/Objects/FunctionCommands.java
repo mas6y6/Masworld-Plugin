@@ -698,19 +698,19 @@ public class FunctionCommands {
         player.sendMessage(TextSymbols.SUCCESS.append(Component.text("EffectRegister at \""+effectRegister.id+"\"").color(NamedTextColor.WHITE)));
         player.sendMessage(Component.text(effectRegister.name).color(NamedTextColor.GREEN));
         player.sendMessage(Component.text("Is disabled: "+effectRegister.disabled).color(NamedTextColor.WHITE));
-        player.sendMessage(Component.text("Is sneak only: "+effectRegister.disabled).color(NamedTextColor.WHITE));
+        player.sendMessage(Component.text("Is sneak only: "+effectRegister.onlysneaking).color(NamedTextColor.WHITE));
         player.sendMessage(Component.empty());
         player.sendMessage(Component.text("Applies in the following dimensions:").color(NamedTextColor.WHITE));
         for (String dimension : effectRegister.dimensions) {
             player.sendMessage(Component.text("- "+dimension).color(NamedTextColor.LIGHT_PURPLE));
         }
         player.sendMessage(Component.empty());
-        player.sendMessage(Component.text("Applies in the following slots:"+effectRegister.disabled).color(NamedTextColor.WHITE));
+        player.sendMessage(Component.text("Applies in the following slots:").color(NamedTextColor.WHITE));
         for (String slot : effectRegister.slots) {
             player.sendMessage(Component.text("- "+slot).color(NamedTextColor.GRAY));
         }
         player.sendMessage(Component.empty());
-        player.sendMessage(Component.text("Applies the following effects:"+effectRegister.disabled).color(NamedTextColor.WHITE));
+        player.sendMessage(Component.text("Applies the following effects:").color(NamedTextColor.WHITE));
         for (Map.Entry<String,EffectData> entry : effectRegister.getEffects().entrySet()) {
             String key = entry.getKey();
             EffectData effect = entry.getValue();

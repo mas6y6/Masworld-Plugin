@@ -116,18 +116,16 @@ public class ItemEffects {
         PersistentDataContainer pdc = item.getItemMeta().getPersistentDataContainer();
         NamespacedKey key = new NamespacedKey(main, "masworld_effect");
 
-        Integer intVal = pdc.get(key, PersistentDataType.INTEGER);
-        if (intVal != null) {
-            return intVal.toString();
+        try {
+            Integer intVal = pdc.get(key, PersistentDataType.INTEGER);
+            if (intVal != null) return intVal.toString();
+        } catch (IllegalArgumentException ignored) {
+            // Expected if tag type is not integer
         }
 
-        String strVal = pdc.get(key, PersistentDataType.STRING);
-        if (strVal != null) {
-            return strVal;
-        }
-
-        return null;
+        return pdc.get(key, PersistentDataType.STRING);
     }
+
 
     public List<EffectData> calculateEffects(Player player) {
         PlayerInventory inventory = player.getInventory();
