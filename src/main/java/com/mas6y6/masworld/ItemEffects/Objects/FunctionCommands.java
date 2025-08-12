@@ -10,15 +10,22 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.event.HoverEvent;
 import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.NamespacedKey;
 import org.bukkit.Registry;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.persistence.PersistentDataContainer;
+import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.potion.PotionEffectType;
+import org.checkerframework.checker.units.qual.N;
 
 import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -102,10 +109,16 @@ public class FunctionCommands {
 
         EffectRegister effectRegister = new EffectRegister();
         effectRegister.cfgver = this.itemeffects.cfgver;
-        Path dir = Paths.get(this.itemeffects.dir.toURI());
-        effectRegister.path = String.valueOf(dir.resolve(effectRegister.name).toUri());
         effectRegister.name = name;
         effectRegister.id = id;
+        effectRegister.slots = new ArrayList<String>();
+        effectRegister.dimensions = List.of("world","world_nether","world_the_end");
+        effectRegister.effects = new HashMap<String,EffectData>();
+
+        Path dir = this.itemeffects.dir.toPath();
+        Path filePath = dir.resolve(effectRegister.name + ".json");
+        effectRegister.path = filePath.toString();
+        source.getSender().sendMessage(Component.text("File path: " + effectRegister.path));
 
         source.getSender().sendMessage(TextSymbols.SUCCESS.append(Component.text("Successfully created and registered \""+effectRegister.name+"\" at \""+effectRegister.id+"\"").color(NamedTextColor.WHITE)));
         this.itemeffects.registerEffect(effectRegister);
@@ -181,6 +194,11 @@ public class FunctionCommands {
 
         EffectRegister effectregister = this.itemeffects.getEffect(id);
 
+        if (effectregister == null) {
+            player.sendMessage(TextSymbols.ERROR.append(Component.text("EffectRegistry \""+id+"\" doesn't exist!").color(NamedTextColor.RED)));
+            return 0;
+        }
+
         source.getSender().sendMessage(TextSymbols.INFO.append(Component.text("Effective Slots for \""+effectregister.name+"\"").color(NamedTextColor.WHITE)));
 
         for (String slot : effectregister.getSlots()) {
@@ -194,7 +212,7 @@ public class FunctionCommands {
         CommandSourceStack source = context.getSource();
 
         String id = context.getArgument("id",String.class);
-        String potion = context.getArgument("potion",String.class);
+        NamespacedKey potion = context.getArgument("potion",NamespacedKey.class);
         Integer amplifier = context.getArgument("amplifier",Integer.class);
         Integer priority = context.getArgument("priority",Integer.class);
 
@@ -213,8 +231,7 @@ public class FunctionCommands {
             return 0;
         }
 
-        NamespacedKey namekey = Utils.parseNamespacedKey(potion);
-        if (Registry.EFFECT.get(namekey) == null) {
+        if (Registry.EFFECT.get(potion) == null) {
             player.sendMessage(TextSymbols.ERROR.append(Component.text("PotionTypeEffect \""+potion+"\" doesn't exist!").color(NamedTextColor.RED)));
             return 0;
         }
@@ -225,15 +242,21 @@ public class FunctionCommands {
         }
 
         EffectRegister effectRegister = this.itemeffects.getEffect(id).copy();
+
+        if (effectRegister.effects.containsKey(potion.toString())) {
+            player.sendMessage(TextSymbols.ERROR.append(Component.text("PotionTypeEffect \""+potion).color(NamedTextColor.RED)));
+            return 0;
+        }
+
         EffectData effectData = new EffectData();
-        PotionEffectType potionEffectType = Registry.EFFECT.get(namekey);
+        PotionEffectType potionEffectType = Registry.EFFECT.get(potion);
 
         effectData.amplifier = amplifier;
         effectData.priority = priority;
-        effectData.effectid = potion;
+        effectData.effectid = potion.toString();
         effectData.effecttype = potionEffectType;
 
-        effectRegister.effects.put(potion,effectData);
+        effectRegister.effects.put(potion.toString(),effectData);
 
         this.itemeffects.modifyEffect(id,effectRegister);
 
@@ -276,6 +299,11 @@ public class FunctionCommands {
         }
 
         EffectRegister effectRegister = this.itemeffects.getEffect(id).copy();
+        if (effectRegister.slots.contains(slot)) {
+            player.sendMessage(TextSymbols.ERROR.append(Component.text("Slot \""+slot+"\" already exists!").color(NamedTextColor.RED)));
+            return 0;
+        }
+
         effectRegister.slots.add(slot);
 
         this.itemeffects.modifyEffect(id,effectRegister);
@@ -319,6 +347,11 @@ public class FunctionCommands {
         }
 
         EffectRegister effectRegister = this.itemeffects.getEffect(id).copy();
+        if (effectRegister.dimensions.contains(dimension)) {
+            player.sendMessage(TextSymbols.ERROR.append(Component.text("Dimension \""+dimension+"\" already exists!").color(NamedTextColor.RED)));
+            return 0;
+        }
+
         effectRegister.dimensions.add(dimension);
 
         this.itemeffects.modifyEffect(id,effectRegister);
@@ -362,6 +395,11 @@ public class FunctionCommands {
         }
 
         EffectRegister effectRegister = this.itemeffects.getEffect(id).copy();
+        if (!(effectRegister.dimensions.contains(dimension))) {
+            player.sendMessage(TextSymbols.ERROR.append(Component.text("Dimension \""+dimension+"\" isn't in dimensions!").color(NamedTextColor.RED)));
+            return 0;
+        }
+
         effectRegister.dimensions.remove(dimension);
 
         this.itemeffects.modifyEffect(id,effectRegister);
@@ -405,6 +443,10 @@ public class FunctionCommands {
         }
 
         EffectRegister effectRegister = this.itemeffects.getEffect(id).copy();
+        if (!(effectRegister.slots.contains(slot))) {
+            player.sendMessage(TextSymbols.ERROR.append(Component.text("Slot \""+slot+"\" isn't in slots!").color(NamedTextColor.RED)));
+            return 0;
+        }
         effectRegister.slots.remove(slot);
 
         this.itemeffects.modifyEffect(id,effectRegister);
@@ -430,7 +472,7 @@ public class FunctionCommands {
         CommandSourceStack source = context.getSource();
 
         String id = context.getArgument("id",String.class);
-        String potion = context.getArgument("potion",String.class);
+        NamespacedKey potion = context.getArgument("potion",NamespacedKey.class);
 
         if (!(source.getSender() instanceof Player player)) {
             source.getSender().sendMessage(TextSymbols.ERROR.append(Component.text("You must be a Player!").color(NamedTextColor.WHITE)));
@@ -442,7 +484,7 @@ public class FunctionCommands {
             }
         }
 
-        if (Registry.EFFECT.get(Utils.parseNamespacedKey(potion)) == null) {
+        if (Registry.EFFECT.get(potion) == null) {
             player.sendMessage(TextSymbols.ERROR.append(Component.text("PotionTypeEffect \""+potion+"\" doesn't exist!").color(NamedTextColor.RED)));
             return 0;
         }
@@ -453,8 +495,15 @@ public class FunctionCommands {
         }
 
         EffectRegister effectRegister = this.itemeffects.getEffect(id).copy();
+        if (!(effectRegister.effects.containsKey(potion.toString()))) {
+            player.sendMessage(TextSymbols.ERROR.append(
+                    Component.text("Potion \"" + potion + "\" isn't in effects!")
+                            .color(NamedTextColor.RED)
+            ));
+            return 0;
+        }
 
-        effectRegister.effects.remove(potion);
+        effectRegister.effects.remove(potion.toString());
 
         this.itemeffects.modifyEffect(id,effectRegister);
 
@@ -496,7 +545,7 @@ public class FunctionCommands {
 
         this.itemeffects.modifyEffect(id,effectRegister);
 
-        source.getSender().sendMessage(TextSymbols.SUCCESS.append(Component.text("Successfully disabled \""+id+"\"").color(NamedTextColor.WHITE)));
+        source.getSender().sendMessage(TextSymbols.SUCCESS.append(Component.text("Successfully set disabled to "+effectRegister.disabled+"\" "+id+"\"").color(NamedTextColor.WHITE)));
 
         source.getSender().sendMessage(TextSymbols.INFO.append(Component.text("Saving EffectRegister to files.").color(NamedTextColor.YELLOW)));
         try {
@@ -534,7 +583,7 @@ public class FunctionCommands {
 
         this.itemeffects.modifyEffect(id,effectRegister);
 
-        source.getSender().sendMessage(TextSymbols.SUCCESS.append(Component.text("Successfully disabled \""+id+"\"").color(NamedTextColor.WHITE)));
+        source.getSender().sendMessage(TextSymbols.SUCCESS.append(Component.text("Successfully set onlysneak to "+effectRegister.onlysneaking+"\" "+id+"\"").color(NamedTextColor.WHITE)));
 
         source.getSender().sendMessage(TextSymbols.INFO.append(Component.text("Saving EffectRegister to files.").color(NamedTextColor.YELLOW)));
         try {
@@ -573,12 +622,13 @@ public class FunctionCommands {
 
         source.getSender().sendMessage(TextSymbols.WARNING.append(Component.text("Are you sure that you want to delete EffectRegister at \""+id+"\"?").color(NamedTextColor.RED)));
         source.getSender().sendMessage(TextSymbols.WARNING.append(
-                Component.text("To confirm please ").append(
+                Component.text("To confirm please ").color(NamedTextColor.RED).append(
                             Component.text("click here")
+                                    .decorate(TextDecoration.UNDERLINED)
                                     .color(NamedTextColor.RED)
                                     .hoverEvent(HoverEvent.showText(Component.text("Click me to paste command").color(NamedTextColor.RED)))
-                                    .clickEvent(ClickEvent.runCommand("/masworld itemeffects remove_register \" "+id+" \" confirm"))
-                        ).append(Component.text(" to run this command"))
+                                    .clickEvent(ClickEvent.runCommand("/masworld itemeffects remove_register "+id+" confirm"))
+                        ).append(Component.text(" to run this command").color(NamedTextColor.RED))
                 )
         );
 
@@ -671,4 +721,54 @@ public class FunctionCommands {
 
         return 0;
     }
+
+    public int attachEffectItem(CommandContext<CommandSourceStack> context) {
+        CommandSourceStack source = context.getSource();
+
+        String id = context.getArgument("id", String.class);
+
+        if (!(source.getSender() instanceof Player player)) {
+            source.getSender().sendMessage(
+                    TextSymbols.ERROR.append(Component.text("You must be a Player!").color(NamedTextColor.WHITE))
+            );
+            return 0;
+        }
+
+        if (!player.hasPermission("masworld.itemeffects.editor")) {
+            player.sendMessage(
+                    TextSymbols.ERROR.append(Component.text("You don't have permission to run this command!").color(NamedTextColor.RED))
+            );
+            return 0;
+        }
+
+        ItemStack itemInHand = player.getInventory().getItemInMainHand();
+        if (itemInHand == null || itemInHand.isEmpty()) {
+            player.sendMessage(
+                    TextSymbols.ERROR.append(Component.text("You must be holding an item!").color(NamedTextColor.RED))
+            );
+            return 0;
+        }
+
+        ItemMeta itemMeta = itemInHand.getItemMeta();
+        if (itemMeta == null) {
+            player.sendMessage(
+                    TextSymbols.ERROR.append(Component.text("This item cannot hold metadata!").color(NamedTextColor.RED))
+            );
+            return 0;
+        }
+
+        PersistentDataContainer container = itemMeta.getPersistentDataContainer();
+        NamespacedKey key = new NamespacedKey(this.itemeffects.main, "masworld_effect");
+        container.set(key, PersistentDataType.STRING, id);
+
+        itemInHand.setItemMeta(itemMeta);
+        player.updateInventory();
+
+        player.sendMessage(
+                TextSymbols.INFO.append(Component.text("Effect '" + id + "' successfully attached to the item!").color(NamedTextColor.GREEN))
+        );
+
+        return 1;  // success
+    }
+
 }

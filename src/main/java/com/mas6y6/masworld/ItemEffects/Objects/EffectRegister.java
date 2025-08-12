@@ -1,6 +1,7 @@
 package com.mas6y6.masworld.ItemEffects.Objects;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import java.util.*;
@@ -11,22 +12,28 @@ import java.util.*;
 public class EffectRegister {
     public int cfgver;
     public String id;
+    @JsonProperty("name")
     public String name;
+    @JsonProperty("disabled")
     public boolean disabled;
+    @JsonProperty("onlysneaking")
     public boolean onlysneaking;
+    @JsonProperty("dimensions")
     public List<String> dimensions;
+    @JsonProperty("slots")
     public List<String> slots;
+    @JsonProperty("effects")
     public Map<String, EffectData> effects;
     public transient String path;
 
     public boolean validate() {
         if (cfgver == 0) throw new IllegalStateException("cfgver cannot be 0");
-        if (id == null || id.isEmpty()) throw new IllegalStateException("id cannot be null or empty");
-        if (name == null || name.isEmpty()) throw new IllegalStateException("name cannot be null or empty");
+        if (id == null || id.isEmpty()) throw new IllegalStateException("id cannot be null");
+        if (name == null || name.isEmpty()) throw new IllegalStateException("name cannot be null");
         // onlysneaking is primitive boolean, can't be null, no need to check
-        if (dimensions == null || dimensions.isEmpty()) throw new IllegalStateException("dimensions cannot be null or empty");
-        if (slots == null || slots.isEmpty()) throw new IllegalStateException("slots cannot be null or empty");
-        if (effects == null || effects.isEmpty()) throw new IllegalStateException("effects cannot be null or empty");
+        if (dimensions == null) throw new IllegalStateException("dimensions cannot be null");
+        if (slots == null) throw new IllegalStateException("slots cannot be null");
+        if (effects == null) throw new IllegalStateException("effects cannot be null");
 
         // Optional: validate entries inside effects
         for (Map.Entry<String, EffectData> entry : effects.entrySet()) {
@@ -41,34 +48,43 @@ public class EffectRegister {
         return true;
     }
 
+
+    @JsonProperty("cfgver")
     public int getCfgver() {
         return cfgver;
     }
 
+    @JsonProperty("id")
     public String getId() {
         return id;
     }
 
+    @JsonProperty("name")
     public String getName() {
         return name;
     }
 
+    @JsonProperty("disabled")
     public boolean isDisabled() {
         return disabled;
     }
 
+    @JsonProperty("onlysneaking")
     public boolean isOnlySneaking() {
         return onlysneaking;
     }
 
+    @JsonProperty("dimensions")
     public List<String> getDimensions() {
         return dimensions;
     }
 
+    @JsonProperty("effects")
     public Map<String, EffectData> getEffects() {
         return effects;
     }
 
+    @JsonProperty("slots")
     public List<String> getSlots() {
         return slots;
     }

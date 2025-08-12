@@ -10,12 +10,14 @@ import com.mas6y6.masworld.ItemEffects.Objects.FunctionCommands;
 import com.mas6y6.masworld.Masworld;
 import com.mas6y6.masworld.Objects.Utils;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.mojang.brigadier.arguments.ArgumentType;
 import com.mojang.brigadier.arguments.BoolArgumentType;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
+import io.papermc.paper.command.brigadier.argument.ArgumentTypes;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.Registry;
@@ -184,7 +186,16 @@ public class ItemEffects {
         );
 
         commands.then(Commands.literal("remove_register")
-                .then(Commands.argument("id",StringArgumentType.word())
+                .then(Commands.argument("id",StringArgumentType.word()).suggests(
+                        (context, builder) -> {
+                            List<String> options = getEffectIds();
+                            for (String option : options) {
+                                if (option.startsWith(builder.getRemainingLowerCase())) {
+                                    builder.suggest(option);
+                                }
+                            }
+                            return builder.buildFuture();
+                        })
                         .executes(functioncommands::removeEffectRegisteryConfirm)
                         .then(Commands.literal("confirm")
                                 .executes(functioncommands::removeEffectRegistery)
@@ -234,7 +245,7 @@ public class ItemEffects {
                             }
                             return builder.buildFuture();
                         })
-                        .then(Commands.argument("potion", StringArgumentType.word())
+                        .then(Commands.argument("potion", ArgumentTypes.namespacedKey())
                                 .suggests((context, builder) -> {
                                     List<String> options = Utils.getAllPotionsKeys();
                                     for (String option : options) {
@@ -370,7 +381,7 @@ public class ItemEffects {
                             }
                             return builder.buildFuture();
                         })
-                        .then(Commands.argument("potion", StringArgumentType.word())
+                        .then(Commands.argument("potion", ArgumentTypes.namespacedKey())
                                 .suggests((context, builder) -> {
                                     List<String> options = Utils.getAllPotionsKeys();
                                     for (String option : options) {
@@ -416,6 +427,21 @@ public class ItemEffects {
                         .then(Commands.argument("onlysneak", BoolArgumentType.bool())
                                 .executes(functioncommands::setSneakonly)
                         )
+                )
+        );
+
+        commands.then(Commands.literal("attach_effect_to_item")
+                .then(Commands.argument("id", StringArgumentType.word())
+                        .suggests((context, builder) -> {
+                            List<String> options = getEffectIds();
+                            for (String option : options) {
+                                if (option.startsWith(builder.getRemainingLowerCase())) {
+                                    builder.suggest(option);
+                                }
+                            }
+                            return builder.buildFuture();
+                        })
+                        .executes(functioncommands::attachEffectItem)
                 )
         );
 
