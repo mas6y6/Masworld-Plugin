@@ -105,6 +105,12 @@ public class FunctionCommands {
                 return 0;
             }
         }
+
+        if (this.itemeffects.getEffect(id) != null) {
+            source.getSender().sendMessage(TextSymbols.ERROR.append(Component.text("EffectRegister \""+id+"\" already exists!").color(NamedTextColor.RED)));
+            return 0;
+        }
+
         source.getSender().sendMessage(TextSymbols.INFO.append(Component.text("Creating EffectRegister...").color(NamedTextColor.WHITE)));
 
         EffectRegister effectRegister = new EffectRegister();
@@ -231,13 +237,18 @@ public class FunctionCommands {
             return 0;
         }
 
-        if (Registry.EFFECT.get(potion) == null) {
+        if (Registry.MOB_EFFECT.get(potion) == null) {
             player.sendMessage(TextSymbols.ERROR.append(Component.text("PotionTypeEffect \""+potion+"\" doesn't exist!").color(NamedTextColor.RED)));
             return 0;
         }
 
         if (this.itemeffects.getEffect(id) == null) {
             player.sendMessage(TextSymbols.ERROR.append(Component.text("EffectRegistry \""+id+"\" doesn't exist!").color(NamedTextColor.RED)));
+            return 0;
+        }
+
+        if (this.itemeffects.getEffect(id).getPluginloaded()) {
+            source.getSender().sendMessage(TextSymbols.ERROR.append(Component.text("EffectRegister \""+id+"\" cannot be modified as its been loaded by a plugin").color(NamedTextColor.RED)));
             return 0;
         }
 
@@ -249,7 +260,7 @@ public class FunctionCommands {
         }
 
         EffectData effectData = new EffectData();
-        PotionEffectType potionEffectType = Registry.EFFECT.get(potion);
+        PotionEffectType potionEffectType = Registry.MOB_EFFECT.getOrThrow(potion);
 
         effectData.amplifier = amplifier;
         effectData.priority = priority;
@@ -269,7 +280,7 @@ public class FunctionCommands {
             source.getSender().sendMessage(TextSymbols.ERROR.append(Component.text("Failed to save EffectRegister!").color(NamedTextColor.RED)));
             source.getSender().sendMessage(TextSymbols.ERROR.append(Component.text("If plugin reloads this EffectRegister will be lost").color(NamedTextColor.RED)));
             source.getSender().sendMessage(TextSymbols.ERROR.append(Component.text("Please check console for errors!").color(NamedTextColor.RED)));
-            e.printStackTrace();
+            source.getSender().sendMessage(TextSymbols.ERROR.append(Component.text(e.toString()).color(NamedTextColor.RED)));
         } finally {
             source.getSender().sendMessage(TextSymbols.SUCCESS.append(Component.text("Successfully saved \""+effectRegister.name+"\" at \""+effectRegister.path+"\"").color(NamedTextColor.WHITE)));
         }
@@ -295,6 +306,11 @@ public class FunctionCommands {
 
         if (!(List.of("helmet","chestplate","leggings","boots","mainhand","offhand").contains(slot))) {
             player.sendMessage(TextSymbols.ERROR.append(Component.text("\"slot\" must be the following [helmet,chestplate,leggings,boots,mainhand,offhand]").color(NamedTextColor.RED)));
+            return 0;
+        }
+
+        if (this.itemeffects.getEffect(id).getPluginloaded()) {
+            source.getSender().sendMessage(TextSymbols.ERROR.append(Component.text("EffectRegister \""+id+"\" cannot be modified as its been loaded by a plugin").color(NamedTextColor.RED)));
             return 0;
         }
 
@@ -346,6 +362,11 @@ public class FunctionCommands {
             return 0;
         }
 
+        if (this.itemeffects.getEffect(id).getPluginloaded()) {
+            source.getSender().sendMessage(TextSymbols.ERROR.append(Component.text("EffectRegister \""+id+"\" cannot be modified as its been loaded by a plugin").color(NamedTextColor.RED)));
+            return 0;
+        }
+
         EffectRegister effectRegister = this.itemeffects.getEffect(id).copy();
         if (effectRegister.dimensions.contains(dimension)) {
             player.sendMessage(TextSymbols.ERROR.append(Component.text("Dimension \""+dimension+"\" already exists!").color(NamedTextColor.RED)));
@@ -394,6 +415,11 @@ public class FunctionCommands {
             return 0;
         }
 
+        if (this.itemeffects.getEffect(id).getPluginloaded()) {
+            source.getSender().sendMessage(TextSymbols.ERROR.append(Component.text("EffectRegister \""+id+"\" cannot be modified as its been loaded by a plugin").color(NamedTextColor.RED)));
+            return 0;
+        }
+
         EffectRegister effectRegister = this.itemeffects.getEffect(id).copy();
         if (!(effectRegister.dimensions.contains(dimension))) {
             player.sendMessage(TextSymbols.ERROR.append(Component.text("Dimension \""+dimension+"\" isn't in dimensions!").color(NamedTextColor.RED)));
@@ -439,6 +465,11 @@ public class FunctionCommands {
 
         if (!(List.of("helmet","chestplate","leggings","boots","mainhand","offhand").contains(slot))) {
             player.sendMessage(TextSymbols.ERROR.append(Component.text("\"slot\" must be the following [helmet,chestplate,leggings,boots,mainhand,offhand]").color(NamedTextColor.RED)));
+            return 0;
+        }
+
+        if (this.itemeffects.getEffect(id).getPluginloaded()) {
+            source.getSender().sendMessage(TextSymbols.ERROR.append(Component.text("EffectRegister \""+id+"\" cannot be modified as its been loaded by a plugin").color(NamedTextColor.RED)));
             return 0;
         }
 
@@ -494,6 +525,11 @@ public class FunctionCommands {
             return 0;
         }
 
+        if (this.itemeffects.getEffect(id).getPluginloaded()) {
+            source.getSender().sendMessage(TextSymbols.ERROR.append(Component.text("EffectRegister \""+id+"\" cannot be modified as its been loaded by a plugin").color(NamedTextColor.RED)));
+            return 0;
+        }
+
         EffectRegister effectRegister = this.itemeffects.getEffect(id).copy();
         if (!(effectRegister.effects.containsKey(potion.toString()))) {
             player.sendMessage(TextSymbols.ERROR.append(
@@ -540,6 +576,11 @@ public class FunctionCommands {
             }
         }
 
+        if (this.itemeffects.getEffect(id).getPluginloaded()) {
+            source.getSender().sendMessage(TextSymbols.ERROR.append(Component.text("EffectRegister \""+id+"\" cannot be modified as its been loaded by a plugin").color(NamedTextColor.RED)));
+            return 0;
+        }
+
         EffectRegister effectRegister = this.itemeffects.getEffect(id).copy();
         effectRegister.disabled = disabled;
 
@@ -576,6 +617,11 @@ public class FunctionCommands {
                 player.sendMessage(TextSymbols.ERROR.append(Component.text("You don't have the permission to run this command!").color(NamedTextColor.RED)));
                 return 0;
             }
+        }
+
+        if (this.itemeffects.getEffect(id).getPluginloaded()) {
+            source.getSender().sendMessage(TextSymbols.ERROR.append(Component.text("EffectRegister \""+id+"\" cannot be modified as its been loaded by a plugin").color(NamedTextColor.RED)));
+            return 0;
         }
 
         EffectRegister effectRegister = this.itemeffects.getEffect(id).copy();
@@ -620,6 +666,11 @@ public class FunctionCommands {
             return 0;
         }
 
+        if (this.itemeffects.getEffect(id).getPluginloaded()) {
+            source.getSender().sendMessage(TextSymbols.ERROR.append(Component.text("EffectRegister \""+id+"\" cannot be deleted as its been loaded by a plugin").color(NamedTextColor.RED)));
+            return 0;
+        }
+
         source.getSender().sendMessage(TextSymbols.WARNING.append(Component.text("Are you sure that you want to delete EffectRegister at \""+id+"\"?").color(NamedTextColor.RED)));
         source.getSender().sendMessage(TextSymbols.WARNING.append(
                 Component.text("To confirm please ").color(NamedTextColor.RED).append(
@@ -631,6 +682,8 @@ public class FunctionCommands {
                         ).append(Component.text(" to run this command").color(NamedTextColor.RED))
                 )
         );
+
+        this.itemeffects.loadEffects();
 
         return 0;
     }
@@ -654,6 +707,11 @@ public class FunctionCommands {
 
         if (effectRegister == null) {
             source.getSender().sendMessage(TextSymbols.ERROR.append(Component.text("EffectRegister \""+id+"\" doesnt exist").color(NamedTextColor.RED)));
+            return 0;
+        }
+
+        if (effectRegister.getPluginloaded()) {
+            source.getSender().sendMessage(TextSymbols.ERROR.append(Component.text("EffectRegister \""+id+"\" cannot be deleted as its been loaded by a plugin").color(NamedTextColor.RED)));
             return 0;
         }
 

@@ -27,24 +27,15 @@ public class EffectData {
 
     @JsonIgnore
     public String getEffectid() {
-        if (effecttype == null) {
-            throw new IllegalStateException("Effect id is not set for effect: " + effectid);
-        }
         return this.effectid;
     }
 
     @JsonIgnore
     public PotionEffectType getEffecttype() {
-        if (effecttype == null) {
-            throw new IllegalStateException("Effect type is not set for effect: " + effectid);
-        }
         return this.effecttype;
     }
 
     public PotionEffect buildPotion() {
-        if (effecttype == null) {
-            throw new IllegalStateException("Effect type is not set for effect: " + effectid);
-        }
 
         int infiniteTicks = Integer.MAX_VALUE;
 

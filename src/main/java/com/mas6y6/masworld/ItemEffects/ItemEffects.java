@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
+import com.mas6y6.masworld.ItemEffects.Events.ItemEffectsRegisterEvent;
 import com.mas6y6.masworld.ItemEffects.Objects.EffectData;
 import com.mas6y6.masworld.ItemEffects.Objects.EffectRegister;
 import com.mas6y6.masworld.ItemEffects.Objects.FunctionCommands;
@@ -18,6 +19,7 @@ import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
 import io.papermc.paper.command.brigadier.argument.ArgumentTypes;
+import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.Registry;
@@ -63,6 +65,9 @@ public class ItemEffects {
             files = new File[0];  // empty array of File
         }
 
+        // Call any plugins using ItemEffects to register effects
+        Bukkit.getPluginManager().callEvent(new ItemEffectsRegisterEvent(this));
+
         for (File file : files) {
             try {
                 EffectRegister effectregister = mapper.readValue(file, EffectRegister.class);
@@ -79,8 +84,7 @@ public class ItemEffects {
                 }
 
                 if (effectregister.validate()) {
-                    main.getLogger().info("Registered \"" + effectregister.name + "\" at \"" + effectregister.id + "\"");
-                    effects.put(effectregister.id, effectregister);
+                    this.registerEffect(effectregister);
                 }
             } catch (Exception e) {
                 main.getLogger().severe(String.format("Failed to register effect from file \"%s\": %s", file.getName(), e.getMessage()));
@@ -500,9 +504,8 @@ public class ItemEffects {
         Path filePath = Path.of(effectRegister.getPath());
         Files.writeString(filePath, json);
 
-        for (Player player : this.main.getServer().getOnlinePlayers()) {
-            this.applyEffects(player);
-        }
+        this.loadEffects();
+        this.reloadPlayerEffects();
 
         return json;
     }

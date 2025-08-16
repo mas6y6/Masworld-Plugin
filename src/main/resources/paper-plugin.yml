@@ -1,8 +1,9 @@
 name: masworld
-version: '1.8.1'
+version: '1.11.5'
 main: com.mas6y6.masworld.Masworld
 api-version: '1.21'
 description: Masworld SMP Custom Item Handler Plugin
+bootstrapper: com.mas6y6.masworld.MasworldPluginBootstrap
 dependencies:
   server:
     NBTAPI:

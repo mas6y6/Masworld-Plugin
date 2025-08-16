@@ -1,30 +1,27 @@
 package com.mas6y6.masworld;
 import com.mas6y6.masworld.Commands.FixItems;
-import com.mas6y6.masworld.EconomySystem.EconomySystem;
+import com.mas6y6.masworld.Economy.MasEconomy;
 import com.mas6y6.masworld.ItemEffects.ItemEffects;
 import com.mas6y6.masworld.Objects.TextSymbols;
-import com.mojang.brigadier.arguments.StringArgumentType;
+import com.mas6y6.masworld.Weapons.Weapons;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
 import de.tr7zw.nbtapi.NBT;
 import de.tr7zw.nbtapi.iface.ReadableItemNBT;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
-import io.papermc.paper.datacomponent.item.CustomModelData;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.format.NamedTextColor;
-import org.bukkit.Color;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.inventory.meta.components.CustomModelDataComponent;
+import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.configuration.Configuration;
-import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
-import java.util.List;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
 
@@ -33,9 +30,10 @@ import static net.kyori.adventure.text.format.NamedTextColor.*;
 public final class Masworld extends JavaPlugin {
 
     public Configuration config;
-    public File itemsDir;
     public ItemEffects itemeffects;
-    public EconomySystem econamy;
+    public ArrayList<JavaPlugin> subplugins;
+    public MasEconomy maseconomy;
+    public Weapons weapons;
 
     @Override
     public void onEnable() {
@@ -68,12 +66,14 @@ public final class Masworld extends JavaPlugin {
         }
 
         FixItems fixitemsfunctions = new FixItems(this);
-        EconomySystem econamy = new EconomySystem(this);
+        this.maseconomy = new MasEconomy(this);
+
+        this.weapons = new Weapons(this);
 
         this.getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, commands -> {
             LiteralArgumentBuilder<CommandSourceStack> root = Commands.literal("masworld");
 
-            root.then(Commands.literal("reload").executes(this::pluginReload));
+            root.then(Commands.literal("reload").executes(this::pluginReloadcommmand));
 
             LiteralArgumentBuilder<CommandSourceStack> fixitem = Commands.literal("fixitem");
             fixitem.then(Commands.literal("effect").executes(fixitemsfunctions::effect));
@@ -105,6 +105,8 @@ public final class Masworld extends JavaPlugin {
             root.then(fixitem);
 
             root.then(itemeffects.buildCommands());
+            root.then(maseconomy.buildCommands());
+
             commands.registrar().register(root.build());
         });
 
@@ -117,6 +119,9 @@ public final class Masworld extends JavaPlugin {
                 }
             }
         }, 0L,20L);
+
+
+
     }
 
     @Override
@@ -124,13 +129,26 @@ public final class Masworld extends JavaPlugin {
         getLogger().info("Shutting down Masworld Plugin");
     }
 
-    public int pluginReload(CommandContext context) {
+    public ItemEffects getItemEffects() {
+        return this.itemeffects;
+    }
+
+    public int pluginReloadcommmand(CommandContext context) {
         CommandSourceStack source = (CommandSourceStack) context.getSource();
-        getLogger().info("Reloading Masworld Plugin");
         if (source.getSender() instanceof Player player) {
             player.sendMessage(TextSymbols.WARNING.append(Component.text("Reloading Masworld").color(YELLOW)));
         }
 
+        mainReload();
+
+        if (source.getSender() instanceof Player player) {
+            player.sendMessage(TextSymbols.SUCCESS.append(Component.text("Reload Complete!").color(GREEN)));
+        }
+        return 0;
+    }
+
+    public void mainReload() {
+        getLogger().info("Reloading Masworld Plugin");
         try {
             this.itemeffects.loadEffects();
         } catch (Exception e) {
@@ -145,9 +163,5 @@ public final class Masworld extends JavaPlugin {
         }
 
         getLogger().info("Reload Complete");
-        if (source.getSender() instanceof Player player) {
-            player.sendMessage(TextSymbols.SUCCESS.append(Component.text("Reload Complete!").color(GREEN)));
-        }
-        return 0;
     }
 }

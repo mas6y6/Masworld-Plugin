@@ -1,5 +1,6 @@
 package com.mas6y6.masworld.ItemEffects.Objects;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
@@ -25,6 +26,7 @@ public class EffectRegister {
     @JsonProperty("effects")
     public Map<String, EffectData> effects;
     public transient String path;
+    public transient boolean pluginloaded;
 
     public boolean validate() {
         if (cfgver == 0) throw new IllegalStateException("cfgver cannot be 0");
@@ -89,8 +91,14 @@ public class EffectRegister {
         return slots;
     }
 
+    @JsonIgnore
     public String getPath() {
         return path;
+    }
+
+    @JsonIgnore
+    public Boolean getPluginloaded() {
+        return pluginloaded;
     }
 
     public EffectRegister copy() {
@@ -102,6 +110,7 @@ public class EffectRegister {
         copy.disabled = this.disabled;
         copy.onlysneaking = this.onlysneaking;
         copy.path = this.path;
+        copy.pluginloaded = this.pluginloaded;
 
         // Deep copy lists
         copy.dimensions = (this.dimensions != null) ? new ArrayList<>(this.dimensions) : null;
