@@ -5,17 +5,20 @@ import io.papermc.paper.registry.RegistryAccess;
 import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.enchantments.Enchantment;
-import org.bukkit.entity.Entity;
-import org.bukkit.entity.ExperienceOrb;
-import org.bukkit.entity.Item;
-import org.bukkit.entity.Player;
+import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.entity.ProjectileHitEvent;
+import org.bukkit.event.entity.ProjectileLaunchEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.inventory.ItemStack;
 import io.papermc.paper.registry.RegistryKey;
+import org.bukkit.inventory.PlayerInventory;
+import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.persistence.PersistentDataContainer;
+import org.bukkit.persistence.PersistentDataType;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
@@ -237,5 +240,50 @@ public class Listeners implements Listener {
             player.getWorld().spawnParticle(Particle.DUST, particleLoc, 1, 0, 0, 0, 0, dustOptions);
         }
     }
+
+    @EventHandler
+    public void dynamiteThrow(ProjectileLaunchEvent event) {
+        Projectile projectile = event.getEntity();
+
+        if (projectile.getShooter() instanceof Player player) {
+            ItemStack item = player.getInventory().getItemInMainHand();
+
+            if (item.hasItemMeta()) {
+                ItemMeta meta = item.getItemMeta();
+                PersistentDataContainer container = meta.getPersistentDataContainer();
+
+                NamespacedKey specialEffectId = new NamespacedKey(this.weapons.main, "special_effect");
+
+                if (container.has(specialEffectId, PersistentDataType.STRING)) {
+                    String effect = container.get(specialEffectId, PersistentDataType.STRING);
+
+                    assert effect != null;
+                    projectile.getPersistentDataContainer().set(specialEffectId, PersistentDataType.STRING, effect);
+                }
+            }
+        }
+    }
+
+    @EventHandler
+    public void dynamiteHit(ProjectileHitEvent event) {
+        if (!(event.getEntity() instanceof Snowball snowball)) return;
+
+        Projectile projectile = event.getEntity();
+        NamespacedKey specialEffectId = new NamespacedKey(this.weapons.main, "special_effect");
+
+        if (projectile.getPersistentDataContainer().has(specialEffectId, PersistentDataType.STRING)) {
+            String effect = projectile.getPersistentDataContainer().get(specialEffectId, PersistentDataType.STRING);
+
+            if ("dynamite".equals(effect)) {
+                Bukkit.getScheduler().runTaskLater(this.weapons.main, () -> {
+                    if (!snowball.isDead()) {
+                        snowball.remove();
+                    }
+                    snowball.getWorld().createExplosion(snowball.getLocation(), 2.0F, true, true);
+                }, 40L);
+            }
+        }
+    }
+
 
 }
