@@ -21,8 +21,6 @@ import org.bukkit.configuration.Configuration;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.function.Function;
 
 import static net.kyori.adventure.text.format.NamedTextColor.*;
@@ -106,6 +104,7 @@ public final class Masworld extends JavaPlugin {
 
             root.then(itemeffects.buildCommands());
             root.then(maseconomy.buildCommands());
+            root.then(weapons.buildCommands());
 
             commands.registrar().register(root.build());
         });

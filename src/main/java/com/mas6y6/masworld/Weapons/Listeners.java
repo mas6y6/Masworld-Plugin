@@ -253,12 +253,24 @@ public class Listeners implements Listener {
                 PersistentDataContainer container = meta.getPersistentDataContainer();
 
                 NamespacedKey specialEffectId = new NamespacedKey(this.weapons.main, "special_effect");
+                NamespacedKey powerkey = new NamespacedKey(this.weapons.main, "dynamite_power");
+                NamespacedKey fusekey = new NamespacedKey(this.weapons.main, "dynamite_fuse");
 
                 if (container.has(specialEffectId, PersistentDataType.STRING)) {
                     String effect = container.get(specialEffectId, PersistentDataType.STRING);
+                    Long fuse = Objects.requireNonNull(container.get(fusekey, PersistentDataType.LONG));
+                    Float power = Objects.requireNonNull(container.get(powerkey, PersistentDataType.FLOAT));
 
-                    assert effect != null;
-                    projectile.getPersistentDataContainer().set(specialEffectId, PersistentDataType.STRING, effect);
+                    if (effect != null) {
+                        projectile.getPersistentDataContainer()
+                                .set(specialEffectId, PersistentDataType.STRING, effect);
+
+                        projectile.getPersistentDataContainer()
+                                .set(powerkey, PersistentDataType.FLOAT, power);
+
+                        projectile.getPersistentDataContainer()
+                                .set(fusekey, PersistentDataType.LONG, fuse);
+                    }
                 }
             }
         }
@@ -270,17 +282,58 @@ public class Listeners implements Listener {
 
         Projectile projectile = event.getEntity();
         NamespacedKey specialEffectId = new NamespacedKey(this.weapons.main, "special_effect");
+        NamespacedKey powerkey = new NamespacedKey(this.weapons.main, "dynamite_power");
+        NamespacedKey fusekey = new NamespacedKey(this.weapons.main, "dynamite_fuse");
 
         if (projectile.getPersistentDataContainer().has(specialEffectId, PersistentDataType.STRING)) {
             String effect = projectile.getPersistentDataContainer().get(specialEffectId, PersistentDataType.STRING);
+            Long fuse = Objects.requireNonNull(projectile.getPersistentDataContainer().get(fusekey, PersistentDataType.LONG));
+            Float power = Objects.requireNonNull(projectile.getPersistentDataContainer().get(powerkey, PersistentDataType.FLOAT));
 
             if ("dynamite".equals(effect)) {
+                snowball.getWorld().playSound(snowball.getLocation(), Sound.ENTITY_TNT_PRIMED, 1.0F, 1.0F);
+
+                ItemStack dynamiteItem = new ItemStack(Material.SNOWBALL);
+                ItemMeta meta = dynamiteItem.getItemMeta();
+                meta.setItemModel(new NamespacedKey("masworld","dynamite"));
+                dynamiteItem.setItemMeta(meta);
+
+                ItemDisplay itemDisplay =  snowball.getWorld().spawn(snowball.getLocation(),ItemDisplay.class,d -> {
+                    d.setItemStack(dynamiteItem);
+                    d.setGravity(false);
+                    d.setInterpolationDuration(0);
+                    d.setBillboard(Display.Billboard.FIXED);
+                });
+
+                final int taskId = Bukkit.getScheduler().scheduleSyncRepeatingTask(this.weapons.main, () -> {
+                    Location currentLoc = snowball.getLocation();
+                    currentLoc.getWorld().spawnParticle(
+                            Particle.SMOKE,
+                            currentLoc,
+                            8,
+                            0.2, 0.2, 0.2,
+                            0.01           // speed
+                    );
+
+                    currentLoc.getWorld().spawnParticle(
+                            Particle.FLAME,
+                            currentLoc,
+                            8,
+                            0.2, 0.2, 0.2,
+                            0.01           // speed
+                    );
+                }, 0L, 5L);
+
                 Bukkit.getScheduler().runTaskLater(this.weapons.main, () -> {
                     if (!snowball.isDead()) {
                         snowball.remove();
                     }
-                    snowball.getWorld().createExplosion(snowball.getLocation(), 2.0F, true, true);
-                }, 40L);
+
+                    Bukkit.getScheduler().cancelTask(taskId);
+                    itemDisplay.remove();
+
+                    snowball.getWorld().createExplosion(snowball.getLocation(), power, true, true);
+                }, fuse);
             }
         }
     }
