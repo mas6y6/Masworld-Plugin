@@ -1,27 +1,19 @@
 package com.mas6y6.masworld;
-import com.mas6y6.masworld.Commands.FixItems;
 import com.mas6y6.masworld.Economy.MasEconomy;
 import com.mas6y6.masworld.ItemEffects.ItemEffects;
 import com.mas6y6.masworld.Objects.TextSymbols;
 import com.mas6y6.masworld.Weapons.Weapons;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
-import de.tr7zw.nbtapi.NBT;
-import de.tr7zw.nbtapi.iface.ReadableItemNBT;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import net.kyori.adventure.text.Component;
-import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemStack;
-import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.configuration.Configuration;
-
 import java.io.File;
 import java.util.ArrayList;
-import java.util.function.Function;
 
 import static net.kyori.adventure.text.format.NamedTextColor.*;
 
@@ -63,7 +55,6 @@ public final class Masworld extends JavaPlugin {
             this.getServer().getPluginManager().disablePlugin(this);
         }
 
-        FixItems fixitemsfunctions = new FixItems(this);
         this.maseconomy = new MasEconomy(this);
 
         this.weapons = new Weapons(this);
@@ -72,35 +63,6 @@ public final class Masworld extends JavaPlugin {
             LiteralArgumentBuilder<CommandSourceStack> root = Commands.literal("masworld");
 
             root.then(Commands.literal("reload").executes(this::pluginReloadcommmand));
-
-            LiteralArgumentBuilder<CommandSourceStack> fixitem = Commands.literal("fixitem");
-            fixitem.then(Commands.literal("effect").executes(fixitemsfunctions::effect));
-            fixitem.then(Commands.literal("upgrade_template").executes(fixitemsfunctions::upgrade_template));
-            fixitem.then(Commands.literal("upgrade_data").executes(fixitemsfunctions::upgrade_data));
-            fixitem.then(Commands.literal("recipe_item").executes(fixitemsfunctions::recipe_item));
-            fixitem.then(Commands.literal("test").executes(context -> {
-
-                CommandSourceStack source = (CommandSourceStack) context.getSource();
-                if (!(source.getSender() instanceof Player player)) {
-                    source.getSender().sendMessage(Component.text("Must be a player!").color(RED));
-                    return 0;
-                }
-
-                ItemStack hand = player.getInventory().getItemInMainHand();
-                if (hand.isEmpty()) {
-                    player.sendMessage(Component.text("Please hold an item.").color(RED));
-                    return 0;
-                }
-
-                int tier = NBT.get(hand, (Function<ReadableItemNBT, Integer>) nbt -> nbt.getOrDefault("masworld_effect", 0));
-
-                player.sendMessage(
-                        Component.text("EffectID = " + tier).color(GREEN)
-                );
-                return 1;
-            }));
-
-            root.then(fixitem);
 
             root.then(itemeffects.buildCommands());
             root.then(maseconomy.buildCommands());
@@ -118,9 +80,6 @@ public final class Masworld extends JavaPlugin {
                 }
             }
         }, 0L,20L);
-
-
-
     }
 
     @Override
@@ -160,7 +119,6 @@ public final class Masworld extends JavaPlugin {
                 this.itemeffects.applyEffects(player);
             }
         }
-
         getLogger().info("Reload Complete");
     }
 }
