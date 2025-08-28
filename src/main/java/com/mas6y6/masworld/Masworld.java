@@ -4,6 +4,7 @@ import com.mas6y6.masworld.Economy.MasEconomy;
 import com.mas6y6.masworld.ItemEffects.ItemEffects;
 import com.mas6y6.masworld.Objects.TextSymbols;
 import com.mas6y6.masworld.Weapons.Weapons;
+import com.mas6y6.masworld.Chat.Chat;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
 import de.tr7zw.nbtapi.NBT;
@@ -67,6 +68,7 @@ public final class Masworld extends JavaPlugin {
         this.maseconomy = new MasEconomy(this);
 
         this.weapons = new Weapons(this);
+        this.chat = new Chat(this);
 
         this.getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, commands -> {
             LiteralArgumentBuilder<CommandSourceStack> root = Commands.literal("masworld");
