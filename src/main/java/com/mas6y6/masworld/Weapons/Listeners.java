@@ -2,6 +2,7 @@ package com.mas6y6.masworld.Weapons;
 
 import com.mas6y6.masworld.Objects.Utils;
 import io.papermc.paper.registry.RegistryAccess;
+import net.kyori.adventure.audience.Audience;
 import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.enchantments.Enchantment;
@@ -38,6 +39,7 @@ public class Listeners implements Listener {
 
     @EventHandler
     public void onPlayerDropItem(PlayerDropItemEvent event) {
+
         Item dropped = event.getItemDrop();
         recentlyDropped.add(dropped.getUniqueId());
 
