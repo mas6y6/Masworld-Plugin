@@ -8,7 +8,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 
-public class ChatListeners implements Listener, ChatRenderer {
+public class Listeners implements Listener, ChatRenderer {
     @EventHandler
     public void OnChat(AsyncChatEvent event) {
         event.renderer(this);
