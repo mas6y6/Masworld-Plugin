@@ -25,6 +25,7 @@ public final class Masworld extends JavaPlugin {
     public ArrayList<JavaPlugin> subplugins;
     public MasEconomy maseconomy;
     public Weapons weapons;
+    public Chat chat;
 
     @Override
     public void onEnable() {
