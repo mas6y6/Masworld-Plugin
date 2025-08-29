@@ -491,7 +491,7 @@ public class ItemEffects {
 
     public String saveToFile(EffectRegister effectRegister) throws IOException {
         if (effectRegister.getPath() == null || effectRegister.getPath().isEmpty()) {
-            throw new IllegalArgumentException("EffectRegister.path is not set");
+            throw new IllegalArgumentException("EffectRegister.path is not change");
         }
 
         ObjectMapper mapper = new ObjectMapper();

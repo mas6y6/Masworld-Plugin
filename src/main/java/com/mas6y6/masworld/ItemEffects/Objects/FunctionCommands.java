@@ -586,7 +586,7 @@ public class FunctionCommands {
 
         this.itemeffects.modifyEffect(id,effectRegister);
 
-        source.getSender().sendMessage(TextSymbols.SUCCESS.append(Component.text("Successfully set disabled to "+effectRegister.disabled+"\" "+id+"\"").color(NamedTextColor.WHITE)));
+        source.getSender().sendMessage(TextSymbols.SUCCESS.append(Component.text("Successfully change disabled to "+effectRegister.disabled+"\" "+id+"\"").color(NamedTextColor.WHITE)));
 
         source.getSender().sendMessage(TextSymbols.INFO.append(Component.text("Saving EffectRegister to files.").color(NamedTextColor.YELLOW)));
         try {
@@ -629,7 +629,7 @@ public class FunctionCommands {
 
         this.itemeffects.modifyEffect(id,effectRegister);
 
-        source.getSender().sendMessage(TextSymbols.SUCCESS.append(Component.text("Successfully set onlysneak to "+effectRegister.onlysneaking+"\" "+id+"\"").color(NamedTextColor.WHITE)));
+        source.getSender().sendMessage(TextSymbols.SUCCESS.append(Component.text("Successfully change onlysneak to "+effectRegister.onlysneaking+"\" "+id+"\"").color(NamedTextColor.WHITE)));
 
         source.getSender().sendMessage(TextSymbols.INFO.append(Component.text("Saving EffectRegister to files.").color(NamedTextColor.YELLOW)));
         try {

@@ -38,7 +38,7 @@ public class SpecialEffect {
             meta.getPersistentDataContainer().set(specialEffectId, PersistentDataType.STRING, value);
         });
 
-        player.sendMessage(TextSymbols.SUCCESS.append(Component.text("Successfully set \"masworld:special_effect\" = \""+ value +"\".").color(NamedTextColor.GREEN)));
+        player.sendMessage(TextSymbols.SUCCESS.append(Component.text("Successfully change \"masworld:special_effect\" = \""+ value +"\".").color(NamedTextColor.GREEN)));
 
         return 0;
     }

@@ -7,8 +7,14 @@ import io.papermc.paper.command.brigadier.CommandSourceStack;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.NamespacedKey;
+import org.bukkit.attribute.Attribute;
+import org.bukkit.attribute.AttributeModifier;
 import org.bukkit.entity.Player;
-import org.bukkit.persistence.PersistentDataType;
+import org.bukkit.inventory.EquipmentSlotGroup;
+import org.bukkit.inventory.meta.ItemMeta;
+import org.jetbrains.annotations.Nullable;
+
+import java.util.Collection;
 
 public class WeaponDamage {
     public Masworld main;
@@ -17,8 +23,8 @@ public class WeaponDamage {
         this.main = plugin;
     }
 
-    public int set(CommandContext<CommandSourceStack> context) {
-        Float value = context.getArgument("value",Float.class);
+    public int change(CommandContext<CommandSourceStack> context) {
+        Double value = context.getArgument("value",Double.class);
 
         CommandSourceStack source = context.getSource();
 
@@ -32,13 +38,31 @@ public class WeaponDamage {
             }
         }
 
-        NamespacedKey namespace = new NamespacedKey(this.main, "dynamite_power");
+        NamespacedKey namespace = new NamespacedKey(this.main, "weapon_damage");
 
         player.getInventory().getItemInMainHand().editMeta(meta -> {
-            meta.getPersistentDataContainer().set(namespace, PersistentDataType.FLOAT, value);
+            Collection<AttributeModifier> modifiers = meta.getAttributeModifiers(Attribute.ATTACK_DAMAGE);
+
+            if (modifiers != null) {
+                modifiers.stream()
+                        .filter(mod -> mod.getName().equals(namespace.getKey()))
+                        .forEach(mod -> meta.removeAttributeModifier(Attribute.ATTACK_DAMAGE, mod));
+            }
         });
 
-        player.sendMessage(TextSymbols.SUCCESS.append(Component.text("Successfully set \"masworld:dynamite_power\" = \""+ value +"\".").color(NamedTextColor.GREEN)));
+        player.getInventory().getItemInMainHand().editMeta(meta -> {
+            meta.addAttributeModifier(
+                    Attribute.ATTACK_DAMAGE,
+                    new AttributeModifier(
+                            namespace,
+                            value,
+                            AttributeModifier.Operation.ADD_NUMBER,
+                            EquipmentSlotGroup.HAND
+                    )
+            );
+        });
+
+        player.sendMessage(TextSymbols.SUCCESS.append(Component.text("Successfully added \"masworld:dynamite_power\" = \""+ value +"\".").color(NamedTextColor.GREEN)));
 
         return 0;
     }
@@ -57,13 +81,11 @@ public class WeaponDamage {
             }
         }
 
-        NamespacedKey namespace = new NamespacedKey(this.main, "dynamite_power");
-
         player.getInventory().getItemInMainHand().editMeta(meta -> {
-            meta.getPersistentDataContainer().remove(namespace);
+            meta.removeAttributeModifier(Attribute.ATTACK_DAMAGE);
         });
 
-        player.sendMessage(TextSymbols.SUCCESS.append(Component.text("Successfully removed \"masworld:dynamite_power\" from item.").color(NamedTextColor.GREEN)));
+        player.sendMessage(TextSymbols.SUCCESS.append(Component.text("Successfully removed custom weapon damage from item.").color(NamedTextColor.GREEN)));
 
         return 0;
     }
@@ -72,21 +94,44 @@ public class WeaponDamage {
         CommandSourceStack source = context.getSource();
 
         if (!(source.getSender() instanceof Player player)) {
-            source.getSender().sendMessage(TextSymbols.ERROR.append(Component.text("You must be a Player!").color(NamedTextColor.WHITE)));
+            source.getSender().sendMessage(TextSymbols.ERROR.append(
+                    Component.text("You must be a Player!").color(NamedTextColor.WHITE)
+            ));
             return 0;
-        } else {
-            if (!(player.hasPermission("masworld.itemeffects.editor"))) {
-                player.sendMessage(TextSymbols.ERROR.append(Component.text("You don't have the permission to run this command!").color(NamedTextColor.RED)));
-                return 0;
-            }
         }
 
-        NamespacedKey namespace = new NamespacedKey(this.main, "dynamite_power");
+        if (!player.hasPermission("masworld.itemeffects.editor")) {
+            player.sendMessage(TextSymbols.ERROR.append(
+                    Component.text("You don't have the permission to run this command!").color(NamedTextColor.RED)
+            ));
+            return 0;
+        }
 
-        Float value = player.getInventory().getItemInMainHand().getPersistentDataContainer().get(namespace,PersistentDataType.FLOAT);
+        ItemMeta meta = player.getInventory().getItemInMainHand().getItemMeta();
+        if (meta == null || meta.getAttributeModifiers() == null) {
+            player.sendMessage(TextSymbols.ERROR.append(
+                    Component.text("No attributes found on this item.").color(NamedTextColor.RED)
+            ));
+            return 0;
+        }
 
-        player.sendMessage(TextSymbols.SUCCESS.append(Component.text("\"masworld:dynamite_power\" = \""+ value +"\"").color(NamedTextColor.GREEN)));
+        Collection<AttributeModifier> modifiers = meta.getAttributeModifiers(Attribute.ATTACK_DAMAGE);
+        if (modifiers == null || modifiers.isEmpty()) {
+            player.sendMessage(TextSymbols.ERROR.append(
+                    Component.text("This item has no custom attack damage.").color(NamedTextColor.RED)
+            ));
+            return 0;
+        }
+
+        NamespacedKey namespace = new NamespacedKey(this.main, "weapon_damage");
+
+        player.getInventory().getItemInMainHand().editMeta(meta2 -> {
+            modifiers.stream()
+                    .filter(mod -> mod.getName().equals(namespace.getKey()))
+                    .forEach(mod -> meta2.removeAttributeModifier(Attribute.ATTACK_DAMAGE, mod));
+        });
 
         return 0;
     }
+
 }
