@@ -127,7 +127,10 @@ public class Listeners implements Listener {
                             item.setAmount(0);
                             return;
                         }
-                        meta.setDamage(meta.getDamage() + 1);
+
+                        if (!(target.isEmpty())) {
+                            meta.setDamage(meta.getDamage() + 1);
+                        }
                         item.setItemMeta(meta);
 
                         target.breakNaturally(item);
