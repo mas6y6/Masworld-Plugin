@@ -6,6 +6,8 @@ import com.mas6y6.masworld.Weapons.Attributes.DynamitePower;
 import com.mas6y6.masworld.Weapons.Attributes.SpecialEffect;
 import com.mas6y6.masworld.Weapons.Attributes.WeaponDamage;
 import com.mas6y6.masworld.Weapons.Attributes.GetAdminStick;
+import com.mas6y6.masworld.Weapons.Attributes.*;
+import com.mojang.brigadier.arguments.DoubleArgumentType;
 import com.mojang.brigadier.arguments.FloatArgumentType;
 import com.mojang.brigadier.arguments.LongArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
@@ -35,6 +37,7 @@ public class Weapons {
     public DynamitePower dynamitePower;
     public DynamiteFuse dynamiteFuse;
     public WeaponDamage weaponDamage;
+    public WeaponCooldown weaponCooldown;
 
 
     
@@ -48,6 +51,7 @@ public class Weapons {
         this.dynamiteFuse = new DynamiteFuse(this.main);
         this.weaponDamage = new WeaponDamage(this.main);
         this.iwantadminstick = new 
+        this.weaponCooldown = new WeaponCooldown(this.main);
     }
 
     public LiteralArgumentBuilder<CommandSourceStack> buildCommands() {
@@ -56,7 +60,7 @@ public class Weapons {
                         Commands.literal("get").executes(specialEffect::get)
                 )
                 .then(
-                        Commands.literal("set")
+                        Commands.literal("change")
                                 .then(Commands.argument("value",StringArgumentType.word())
                                         .executes(specialEffect::set)
                                 )
@@ -71,7 +75,7 @@ public class Weapons {
                         Commands.literal("get").executes(dynamitePower::get)
                 )
                 .then(
-                        Commands.literal("set")
+                        Commands.literal("change")
                                 .then(Commands.argument("value", FloatArgumentType.floatArg(1.0f,100.f))
                                         .executes(dynamitePower::set)
                                 )
@@ -86,7 +90,7 @@ public class Weapons {
                         Commands.literal("get").executes(dynamiteFuse::get)
                 )
                 .then(
-                        Commands.literal("set")
+                        Commands.literal("change")
                                 .then(Commands.argument("value", LongArgumentType.longArg())
                                         .executes(dynamiteFuse::set)
                                 )
@@ -96,18 +100,33 @@ public class Weapons {
                 )
         );
 
-        commands.then(Commands.literal("weapon")
+        commands.then(Commands.literal("weapon_damage")
                 .then(
-                        Commands.literal("get").executes(dynamiteFuse::get)
+                        Commands.literal("get").executes(weaponDamage::get)
                 )
                 .then(
-                        Commands.literal("set")
-                                .then(Commands.argument("value", LongArgumentType.longArg())
-                                        .executes(dynamiteFuse::set)
+                        Commands.literal("change")
+                                .then(Commands.argument("value", DoubleArgumentType.doubleArg())
+                                        .executes(weaponDamage::change)
                                 )
                 )
                 .then(
-                        Commands.literal("reset").executes(dynamiteFuse::reset)
+                        Commands.literal("reset").executes(weaponDamage::reset)
+                )
+        );
+
+        commands.then(Commands.literal("weapon_cooldown")
+                .then(
+                        Commands.literal("get").executes(weaponCooldown::get)
+                )
+                .then(
+                        Commands.literal("change")
+                                .then(Commands.argument("value", DoubleArgumentType.doubleArg())
+                                        .executes(weaponCooldown::change)
+                                )
+                )
+                .then(
+                        Commands.literal("reset").executes(weaponCooldown::reset)
                 )
         );
 

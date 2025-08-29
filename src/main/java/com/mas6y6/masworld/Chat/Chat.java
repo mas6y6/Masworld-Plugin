@@ -7,6 +7,6 @@ public class Chat {
 
     public Chat(Masworld main) {
         this.main = main;
-        this.main.getServer().getPluginManager().registerEvents(new Listeners(), this.main);
+        // this.main.getServer().getPluginManager().registerEvents(new Listeners(), this.main);
     }
 }

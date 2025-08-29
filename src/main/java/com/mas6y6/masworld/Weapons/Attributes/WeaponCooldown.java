@@ -12,14 +12,13 @@ import org.bukkit.attribute.AttributeModifier;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.EquipmentSlotGroup;
 import org.bukkit.inventory.meta.ItemMeta;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.Collection;
 
-public class WeaponDamage {
+public class WeaponCooldown {
     public Masworld main;
 
-    public WeaponDamage(Masworld plugin) {
+    public WeaponCooldown(Masworld plugin) {
         this.main = plugin;
     }
 
@@ -38,7 +37,7 @@ public class WeaponDamage {
             }
         }
 
-        NamespacedKey namespace = new NamespacedKey(this.main, "weapon_damage");
+        NamespacedKey namespace = new NamespacedKey(this.main, "weapon_cooldown");
 
         player.getInventory().getItemInMainHand().editMeta(meta -> {
             Collection<AttributeModifier> modifiers = meta.getAttributeModifiers(Attribute.ATTACK_DAMAGE);
@@ -52,7 +51,7 @@ public class WeaponDamage {
 
         player.getInventory().getItemInMainHand().editMeta(meta -> {
             meta.addAttributeModifier(
-                    Attribute.ATTACK_DAMAGE,
+                    Attribute.ATTACK_SPEED,
                     new AttributeModifier(
                             namespace,
                             value,
@@ -82,7 +81,7 @@ public class WeaponDamage {
         }
 
         player.getInventory().getItemInMainHand().editMeta(meta -> {
-            meta.removeAttributeModifier(Attribute.ATTACK_DAMAGE);
+            meta.removeAttributeModifier(Attribute.ATTACK_SPEED);
         });
 
         player.sendMessage(TextSymbols.SUCCESS.append(Component.text("Successfully removed custom weapon damage from item.").color(NamedTextColor.GREEN)));
@@ -115,7 +114,7 @@ public class WeaponDamage {
             return 0;
         }
 
-        Collection<AttributeModifier> modifiers = meta.getAttributeModifiers(Attribute.ATTACK_DAMAGE);
+        Collection<AttributeModifier> modifiers = meta.getAttributeModifiers(Attribute.ATTACK_SPEED);
         if (modifiers == null || modifiers.isEmpty()) {
             player.sendMessage(TextSymbols.ERROR.append(
                     Component.text("This item has no custom attack damage.").color(NamedTextColor.RED)
@@ -123,12 +122,12 @@ public class WeaponDamage {
             return 0;
         }
 
-        NamespacedKey namespace = new NamespacedKey(this.main, "weapon_damage");
+        NamespacedKey namespace = new NamespacedKey(this.main, "weapon_cooldown");
 
         player.getInventory().getItemInMainHand().editMeta(meta2 -> {
             modifiers.stream()
                     .filter(mod -> mod.getName().equals(namespace.getKey()))
-                    .forEach(mod -> meta2.removeAttributeModifier(Attribute.ATTACK_DAMAGE, mod));
+                    .forEach(mod -> meta2.removeAttributeModifier(Attribute.ATTACK_SPEED, mod));
         });
 
         return 0;

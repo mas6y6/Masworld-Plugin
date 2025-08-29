@@ -38,7 +38,7 @@ public class DynamiteFuse {
             meta.getPersistentDataContainer().set(namespace, PersistentDataType.LONG, value);
         });
 
-        player.sendMessage(TextSymbols.SUCCESS.append(Component.text("Successfully set \"masworld:dynamite_fuse\" = \""+ value +"\".").color(NamedTextColor.GREEN)));
+        player.sendMessage(TextSymbols.SUCCESS.append(Component.text("Successfully change \"masworld:dynamite_fuse\" = \""+ value +"\".").color(NamedTextColor.GREEN)));
 
         return 0;
     }

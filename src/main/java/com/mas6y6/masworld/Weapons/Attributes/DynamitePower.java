@@ -38,7 +38,7 @@ public class DynamitePower {
             meta.getPersistentDataContainer().set(namespace, PersistentDataType.FLOAT, value);
         });
 
-        player.sendMessage(TextSymbols.SUCCESS.append(Component.text("Successfully set \"masworld:dynamite_power\" = \""+ value +"\".").color(NamedTextColor.GREEN)));
+        player.sendMessage(TextSymbols.SUCCESS.append(Component.text("Successfully change \"masworld:dynamite_power\" = \""+ value +"\".").color(NamedTextColor.GREEN)));
 
         return 0;
     }
