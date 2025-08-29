@@ -38,9 +38,6 @@ public class Weapons {
     public DynamiteFuse dynamiteFuse;
     public WeaponDamage weaponDamage;
     public WeaponCooldown weaponCooldown;
-
-
-    
     
     public Weapons(Masworld main) {
         this.main = main;
