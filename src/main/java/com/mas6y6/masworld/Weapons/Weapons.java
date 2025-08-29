@@ -5,22 +5,40 @@ import com.mas6y6.masworld.Weapons.Attributes.DynamiteFuse;
 import com.mas6y6.masworld.Weapons.Attributes.DynamitePower;
 import com.mas6y6.masworld.Weapons.Attributes.SpecialEffect;
 import com.mas6y6.masworld.Weapons.Attributes.WeaponDamage;
+import com.mas6y6.masworld.Weapons.Attributes.GetAdminStick;
 import com.mojang.brigadier.arguments.FloatArgumentType;
 import com.mojang.brigadier.arguments.LongArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.Material;
+import org.bukkit.attribute.Attribute;
+import org.bukkit.attribute.AttributeModifier;
+import org.bukkit.attribute.AttributeModifier.Operation;
+import org.bukkit.enchantments.Enchantment;
+import java.lang.*;
+import java.util.*;
+import com.mas6y6.masworld.Weapons.Attributes.Utils.SetWeaponDamage;
+import net.kyori.adventure.text.Component;
+import org.bukkit.entity.Player;
+import org.bukkit.ChatColor;
 
 public class Weapons {
     public Masworld main;
     public LiteralArgumentBuilder<CommandSourceStack> commands = Commands.literal("attributes");
+    public LiteralArgumentBuilder<CommandSourceStack> adminStickCMD = Commands.literal("iwantadminstick");
 
     public SpecialEffect specialEffect;
     public DynamitePower dynamitePower;
     public DynamiteFuse dynamiteFuse;
     public WeaponDamage weaponDamage;
 
+
+    
+    
     public Weapons(Masworld main) {
         this.main = main;
         this.main.getServer().getPluginManager().registerEvents(new Listeners(this), this.main);
@@ -29,6 +47,7 @@ public class Weapons {
         this.dynamitePower = new DynamitePower(this.main);
         this.dynamiteFuse = new DynamiteFuse(this.main);
         this.weaponDamage = new WeaponDamage(this.main);
+        this.iwantadminstick = new 
     }
 
     public LiteralArgumentBuilder<CommandSourceStack> buildCommands() {
@@ -93,5 +112,17 @@ public class Weapons {
         );
 
         return commands;
+    }
+
+    public LiteralArgumentBuilder<CommandSourceStack> buildAdminStickCMD() {
+        adminStickCMD.executes(ctx -> {
+            CommandSourceStack sender = ctx.getSource();
+            ItemStack adminStick = new GetAdminStick();
+            if (sender.getExecutor() instanceof Player player) {
+                player.getInventory().addItem(adminStick);
+                player.sendMessage(ChatColor.GREEN + "BEHOLD: " + ChatColor.BLUE + "admin_stick");
+            }
+        });
+        return adminStickCMD;
     }
 }
