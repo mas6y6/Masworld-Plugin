@@ -47,7 +47,7 @@ public class Weapons {
         this.dynamitePower = new DynamitePower(this.main);
         this.dynamiteFuse = new DynamiteFuse(this.main);
         this.weaponDamage = new WeaponDamage(this.main);
-        this.iwantadminstick = new 
+        //this.iwantadminstick = new 
         this.weaponCooldown = new WeaponCooldown(this.main);
     }
 
