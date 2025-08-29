@@ -1,10 +1,7 @@
 package com.mas6y6.masworld.Weapons;
 
 import com.mas6y6.masworld.Masworld;
-import com.mas6y6.masworld.Weapons.Attributes.DynamiteFuse;
-import com.mas6y6.masworld.Weapons.Attributes.DynamitePower;
-import com.mas6y6.masworld.Weapons.Attributes.SpecialEffect;
-import com.mas6y6.masworld.Weapons.Attributes.WeaponDamage;
+import com.mas6y6.masworld.Weapons.Attributes.*;
 import com.mojang.brigadier.arguments.DoubleArgumentType;
 import com.mojang.brigadier.arguments.FloatArgumentType;
 import com.mojang.brigadier.arguments.LongArgumentType;
@@ -21,6 +18,7 @@ public class Weapons {
     public DynamitePower dynamitePower;
     public DynamiteFuse dynamiteFuse;
     public WeaponDamage weaponDamage;
+    public WeaponCooldown weaponCooldown;
 
     public Weapons(Masworld main) {
         this.main = main;
@@ -30,6 +28,7 @@ public class Weapons {
         this.dynamitePower = new DynamitePower(this.main);
         this.dynamiteFuse = new DynamiteFuse(this.main);
         this.weaponDamage = new WeaponDamage(this.main);
+        this.weaponCooldown = new WeaponCooldown(this.main);
     }
 
     public LiteralArgumentBuilder<CommandSourceStack> buildCommands() {
@@ -90,6 +89,21 @@ public class Weapons {
                 )
                 .then(
                         Commands.literal("reset").executes(weaponDamage::reset)
+                )
+        );
+
+        commands.then(Commands.literal("weapon_cooldown")
+                .then(
+                        Commands.literal("get").executes(weaponCooldown::get)
+                )
+                .then(
+                        Commands.literal("change")
+                                .then(Commands.argument("value", DoubleArgumentType.doubleArg())
+                                        .executes(weaponCooldown::change)
+                                )
+                )
+                .then(
+                        Commands.literal("reset").executes(weaponCooldown::reset)
                 )
         );
 
