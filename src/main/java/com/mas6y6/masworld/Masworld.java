@@ -15,7 +15,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.configuration.Configuration;
 import java.io.File;
 import java.util.ArrayList;
-
+import com.mas6y6.masworld.Weapons.Attributes.Utils.SetWeaponDamage;
 import static net.kyori.adventure.text.format.NamedTextColor.*;
 
 public final class Masworld extends JavaPlugin {
@@ -30,6 +30,8 @@ public final class Masworld extends JavaPlugin {
     @Override
     public void onEnable() {
         getLogger().info("Starting Masworld Handler");
+
+        SetWeaponDamage.init(this);
 
         saveDefaultConfig();
         config = getConfig();
@@ -70,9 +72,10 @@ public final class Masworld extends JavaPlugin {
             root.then(itemeffects.buildCommands());
             root.then(maseconomy.buildCommands());
             root.then(weapons.buildCommands());
-            root.then(weapons.buildAdminStickCMD());
+            //root.then(weapons.buildAdminStickCMD());
 
             commands.registrar().register(root.build());
+            commands.registrar().register(weapons.buildAdminStickCMD().build());
         });
 
         getLogger().info("Registered Commands");
@@ -88,6 +91,7 @@ public final class Masworld extends JavaPlugin {
 
     @Override
     public void onDisable() {
+        SetWeaponDamage.shutdown();
         getLogger().info("Shutting down Masworld Plugin");
     }
 

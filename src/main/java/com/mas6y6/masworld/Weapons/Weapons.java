@@ -15,16 +15,16 @@ import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.Material;
-import org.bukkit.attribute.Attribute;
-import org.bukkit.attribute.AttributeModifier;
-import org.bukkit.attribute.AttributeModifier.Operation;
-import org.bukkit.enchantments.Enchantment;
+//import org.bukkit.inventory.meta.ItemMeta;
+//import org.bukkit.Material;
+//import org.bukkit.attribute.Attribute;
+//import org.bukkit.attribute.AttributeModifier;
+//import org.bukkit.attribute.AttributeModifier.Operation;
+//import org.bukkit.enchantments.Enchantment;
 import java.lang.*;
 import java.util.*;
-import com.mas6y6.masworld.Weapons.Attributes.Utils.SetWeaponDamage;
-import net.kyori.adventure.text.Component;
+//import com.mas6y6.masworld.Weapons.Attributes.Utils.SetWeaponDamage;
+//import net.kyori.adventure.text.Component;
 import org.bukkit.entity.Player;
 import org.bukkit.ChatColor;
 
@@ -133,11 +133,12 @@ public class Weapons {
     public LiteralArgumentBuilder<CommandSourceStack> buildAdminStickCMD() {
         adminStickCMD.executes(ctx -> {
             CommandSourceStack sender = ctx.getSource();
-            ItemStack adminStick = new GetAdminStick();
+            ItemStack adminStick = new GetAdminStick().adminStick();
             if (sender.getExecutor() instanceof Player player) {
                 player.getInventory().addItem(adminStick);
                 player.sendMessage(ChatColor.GREEN + "BEHOLD: " + ChatColor.BLUE + "admin_stick");
             }
+            return 1;
         });
         return adminStickCMD;
     }
