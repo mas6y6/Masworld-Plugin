@@ -14,7 +14,6 @@ public class GetAdminStick {
         ItemStack _adminStick = ItemType.STICK.createItemStack();
         _adminStick.setAmount(1);
 
-        //_adminStick.addEnchantment(Enchantment.CHANNELING, 1);
         ItemMeta adminStickIM = _adminStick.getItemMeta();
         adminStickIM.setDisplayName(adminStickName);
         adminStickIM.setUnbreakable(true);

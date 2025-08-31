@@ -72,7 +72,6 @@ public final class Masworld extends JavaPlugin {
             root.then(itemeffects.buildCommands());
             root.then(maseconomy.buildCommands());
             root.then(weapons.buildCommands());
-            //root.then(weapons.buildAdminStickCMD());
 
             commands.registrar().register(root.build());
             commands.registrar().register(weapons.buildAdminStickCMD().build());

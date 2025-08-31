@@ -1,6 +1,5 @@
 package com.mas6y6.masworld.Weapons.Attributes.Utils;
 
-//import org.bukkit.Material;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeModifier;
 import org.bukkit.attribute.AttributeModifier.Operation;
@@ -8,7 +7,6 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.NamespacedKey;
 import org.bukkit.plugin.Plugin;
-//import java.util.UUID;
 import java.lang.*;
 
 public class SetWeaponDamage {
