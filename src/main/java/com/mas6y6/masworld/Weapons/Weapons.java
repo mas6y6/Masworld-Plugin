@@ -1,6 +1,7 @@
 package com.mas6y6.masworld.Weapons;
 
 import com.mas6y6.masworld.Masworld;
+import com.mas6y6.masworld.Objects.TextSymbols;
 import com.mas6y6.masworld.Weapons.Attributes.DynamiteFuse;
 import com.mas6y6.masworld.Weapons.Attributes.DynamitePower;
 import com.mas6y6.masworld.Weapons.Attributes.SpecialEffect;
@@ -13,6 +14,8 @@ import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.entity.Player;
 import org.bukkit.ChatColor;
@@ -124,7 +127,13 @@ public class Weapons {
             ItemStack adminStick = new GetAdminStick().adminStick();
             if (sender.getExecutor() instanceof Player player) {
                 player.getInventory().addItem(adminStick);
-                player.sendMessage(ChatColor.GREEN + "BEHOLD: " + ChatColor.BLUE + "admin_stick");
+
+                player.sendMessage(TextSymbols.SUCCESS.append(
+                        Component.text("BEHOLD: ")
+                                .color(NamedTextColor.GREEN)
+                                .append(Component.text("admin_stick")
+                                        .color(NamedTextColor.BLUE))
+                ));
             }
             return 1;
         });

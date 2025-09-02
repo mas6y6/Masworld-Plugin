@@ -364,7 +364,7 @@ public class Listeners implements Listener {
                     extraArrow.setCritical(originalArrow.isCritical());
                     extraArrow.setPickupStatus(originalArrow.getPickupStatus());
                 }
-            }, 10L);
+            }, 5L);
         }
     }
 }
