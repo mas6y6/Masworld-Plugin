@@ -19,6 +19,8 @@ import io.papermc.paper.registry.RegistryKey;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
+import org.bukkit.util.Vector;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
 
@@ -336,6 +338,33 @@ public class Listeners implements Listener {
                     snowball.getWorld().createExplosion(snowball.getLocation(), power, true, true);
                 }, fuse);
             }
+        }
+    }
+
+    @EventHandler
+    public void sandStormBow(EntityShootBowEvent event) {
+        if (!(event.getEntity() instanceof Player player)) return;
+
+        ItemStack bow = event.getBow();
+        if (bow == null) return;
+
+        NamespacedKey special_effectkey = new NamespacedKey(this.weapons.main, "special_effect");
+
+        String effect = bow.getPersistentDataContainer().get(special_effectkey, PersistentDataType.STRING);
+        if (effect != null && effect.equalsIgnoreCase("sandstorm_bow")) {
+            Bukkit.getScheduler().runTaskLater(this.weapons.main, () -> {
+                if (event.getProjectile() instanceof Arrow originalArrow) {
+                    float force = event.getForce();
+                    Vector direction = player.getEyeLocation().getDirection().normalize();
+
+                    Arrow extraArrow = player.getWorld().spawn(player.getEyeLocation(), Arrow.class);
+
+                    extraArrow.setVelocity(direction.multiply(force * 3));
+                    extraArrow.setShooter(player);
+                    extraArrow.setCritical(originalArrow.isCritical());
+                    extraArrow.setPickupStatus(originalArrow.getPickupStatus());
+                }
+            }, 10L);
         }
     }
 }
