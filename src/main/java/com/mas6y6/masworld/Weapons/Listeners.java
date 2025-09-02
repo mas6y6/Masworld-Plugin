@@ -83,8 +83,6 @@ public class Listeners implements Listener {
         }
     }
 
-
-
     @EventHandler
     public void onBlockBreak(BlockBreakEvent event) {
         Player player = event.getPlayer();
