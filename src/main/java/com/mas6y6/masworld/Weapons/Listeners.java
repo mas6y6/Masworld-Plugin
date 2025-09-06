@@ -360,6 +360,7 @@ public class Listeners implements Listener {
                     Arrow extraArrow = player.getWorld().spawn(player.getEyeLocation(), Arrow.class);
 
                     extraArrow.setVelocity(direction.multiply(force * 3));
+                    extraArrow.setPickupStatus(AbstractArrow.PickupStatus.DISALLOWED);
                     extraArrow.setShooter(player);
                     extraArrow.setCritical(originalArrow.isCritical());
                     extraArrow.setPickupStatus(originalArrow.getPickupStatus());
