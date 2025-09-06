@@ -5,9 +5,7 @@ import io.papermc.paper.registry.RegistryAccess;
 import io.papermc.paper.registry.RegistryKey;
 import org.bukkit.*;
 import org.bukkit.block.Block;
-import org.bukkit.block.BlockType;
 import org.bukkit.enchantments.Enchantment;
-import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.potion.PotionEffectType;
 import org.jetbrains.annotations.NotNull;
 
