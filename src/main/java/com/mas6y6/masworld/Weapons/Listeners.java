@@ -363,7 +363,6 @@ public class Listeners implements Listener {
                     extraArrow.setPickupStatus(AbstractArrow.PickupStatus.DISALLOWED);
                     extraArrow.setShooter(player);
                     extraArrow.setCritical(originalArrow.isCritical());
-                    extraArrow.setPickupStatus(originalArrow.getPickupStatus());
                 }
             }, 12L);
         }

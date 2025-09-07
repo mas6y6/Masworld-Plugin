@@ -15,9 +15,12 @@ import io.papermc.paper.registry.keys.tags.ItemTypeTagKeys;
 import io.papermc.paper.tag.PostFlattenTagRegistrar;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.TextColor;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.EquipmentSlotGroup;
 import org.jetbrains.annotations.NotNull;
+import com.mas6y6.masworld.Objects.Utils;
 
 import java.util.Set;
 
@@ -36,7 +39,7 @@ public class MasworldPluginBootstrap implements PluginBootstrap {
                 RegistryEvents.ENCHANTMENT.compose().newHandler(event -> {
                     event.registry().register(
                             MULTIMINE_KEY,
-                            b -> b.description(Component.text("Multimine"))
+                            b -> b.description(Utils.createEnchantmentComponent("\uefe6", TextColor.color(0x9A5CC6),"Multimine"))
                                     .supportedItems(event.getOrCreateTag(ItemTypeTagKeys.ENCHANTABLE_MINING))
                                     .anvilCost(7)
                                     .maxLevel(3)
@@ -52,7 +55,7 @@ public class MasworldPluginBootstrap implements PluginBootstrap {
                 RegistryEvents.ENCHANTMENT.compose().newHandler(event -> {
                     event.registry().register(
                             MULTIXP_KEY,
-                            b -> b.description(Component.text("MultiXP"))
+                            b -> b.description(Utils.createEnchantmentComponent("\uefe6", TextColor.color(0x47A036),"MultiXP"))
                                     .supportedItems(event.getOrCreateTag(ItemTypeTagKeys.ENCHANTABLE_MINING))
                                     .anvilCost(30)
                                     .maxLevel(3)
@@ -68,7 +71,7 @@ public class MasworldPluginBootstrap implements PluginBootstrap {
                 RegistryEvents.ENCHANTMENT.compose().newHandler(event -> {
                     event.registry().register(
                             ITEMMAGNET_KEY,
-                            b -> b.description(Component.text("Itemmagnet"))
+                            b -> b.description(Utils.createEnchantmentComponent("\uefe4", TextColor.color(0x2CBAA8),"Magnet"))
                                     .supportedItems(event.getOrCreateTag(ItemTypeTagKeys.FOOT_ARMOR))
                                     .anvilCost(30)
                                     .maxLevel(3)

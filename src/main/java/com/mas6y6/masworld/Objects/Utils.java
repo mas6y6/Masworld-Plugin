@@ -3,6 +3,9 @@ package com.mas6y6.masworld.Objects;
 import com.mas6y6.masworld.Objects.Exceptions.IllegalKeyException;
 import io.papermc.paper.registry.RegistryAccess;
 import io.papermc.paper.registry.RegistryKey;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.TextColor;
 import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.enchantments.Enchantment;
@@ -133,5 +136,18 @@ public class Utils {
         }
 
         return false;
+    }
+
+    public static Component createEnchantmentComponent(String unicode, NamedTextColor color, String title) {
+        Component icon = Component.text(unicode).color(color);
+        Component text = Component.text(" " + title);
+        return icon.append(text);
+    }
+
+    // Overload method with TextColor (hex or custom)
+    public static Component createEnchantmentComponent(String unicode, TextColor color, String title) {
+        Component icon = Component.text(unicode).color(color);
+        Component text = Component.text(" " + title);
+        return icon.append(text);
     }
 }
