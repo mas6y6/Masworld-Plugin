@@ -2,17 +2,22 @@ package com.mas6y6.masworld.Weapons;
 
 import com.mas6y6.masworld.Objects.Utils;
 import io.papermc.paper.registry.RegistryAccess;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.title.TitlePart;
 import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.entity.EntityShootBowEvent;
 import org.bukkit.event.entity.ProjectileHitEvent;
 import org.bukkit.event.entity.ProjectileLaunchEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
+import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.inventory.ItemStack;
 import io.papermc.paper.registry.RegistryKey;
@@ -35,6 +40,12 @@ public class Listeners implements Listener {
 
     public Listeners(Weapons weapons) {
         this.weapons = weapons;
+
+        Bukkit.getScheduler().runTaskTimer(this.weapons.main,() -> {
+            for (Player player : this.weapons.main.getServer().getOnlinePlayers()) {
+                ItemMagnet(player);
+            }
+        }, 0L,20L);
     }
 
     @EventHandler
@@ -46,12 +57,6 @@ public class Listeners implements Listener {
         Bukkit.getScheduler().runTaskLater(this.weapons.main, () -> {
             recentlyDropped.remove(dropped.getUniqueId());
         }, dropCooldownTicks);
-
-        Bukkit.getScheduler().runTaskTimer(this.weapons.main,() -> {
-            for (Player player : this.weapons.main.getServer().getOnlinePlayers()) {
-                ItemMagnet(player);
-            }
-        }, 0L,20L);
     }
 
 
@@ -260,19 +265,21 @@ public class Listeners implements Listener {
                 NamespacedKey fusekey = new NamespacedKey(this.weapons.main, "dynamite_fuse");
 
                 if (container.has(specialEffectId, PersistentDataType.STRING)) {
-                    String effect = container.get(specialEffectId, PersistentDataType.STRING);
-                    Long fuse = Objects.requireNonNull(container.get(fusekey, PersistentDataType.LONG));
-                    Float power = Objects.requireNonNull(container.get(powerkey, PersistentDataType.FLOAT));
+                    if (container.get(specialEffectId, PersistentDataType.STRING).equals("dynamite")) {
+                        String effect = Objects.requireNonNull(container.get(specialEffectId, PersistentDataType.STRING));
+                        Long fuse = Objects.requireNonNull(container.get(fusekey, PersistentDataType.LONG));
+                        Float power = Objects.requireNonNull(container.get(powerkey, PersistentDataType.FLOAT));
 
-                    if (effect != null) {
-                        projectile.getPersistentDataContainer()
-                                .set(specialEffectId, PersistentDataType.STRING, effect);
+                        if (effect != null) {
+                            projectile.getPersistentDataContainer()
+                                    .set(specialEffectId, PersistentDataType.STRING, effect);
 
-                        projectile.getPersistentDataContainer()
-                                .set(powerkey, PersistentDataType.FLOAT, power);
+                            projectile.getPersistentDataContainer()
+                                    .set(powerkey, PersistentDataType.FLOAT, power);
 
-                        projectile.getPersistentDataContainer()
-                                .set(fusekey, PersistentDataType.LONG, fuse);
+                            projectile.getPersistentDataContainer()
+                                    .set(fusekey, PersistentDataType.LONG, fuse);
+                        }
                     }
                 }
             }
@@ -366,5 +373,108 @@ public class Listeners implements Listener {
                 }
             }, 12L);
         }
+    }
+
+    private final Map<UUID, Long> shulkercooldowns = new HashMap<>();
+
+    @EventHandler
+    public void shulkerSword(PlayerInteractEvent event) {
+        NamespacedKey special_effectkey = new NamespacedKey(this.weapons.main, "special_effect");
+        NamespacedKey cooldownKey = new NamespacedKey(this.weapons.main, "shulker_sword_cooldown");
+        NamespacedKey bulletskey = new NamespacedKey(this.weapons.main, "shulker_sword_bullet");
+
+        ItemStack item = event.getItem();
+        if (item == null) return;
+
+        ItemMeta meta = item.getItemMeta();
+        if (meta == null) return;
+
+        PersistentDataContainer container = meta.getPersistentDataContainer();
+
+        if (container.has(special_effectkey, PersistentDataType.STRING)) {
+            String value = container.get(special_effectkey, PersistentDataType.STRING);
+            if ("shulker_sword".equals(value)) {
+                if (event.getAction() == Action.RIGHT_CLICK_AIR || event.getAction() == Action.RIGHT_CLICK_BLOCK) {
+                    Player player = event.getPlayer();
+
+                    // Check cooldown value from item, default to 15000ms
+                    long itemCooldown = container.getOrDefault(cooldownKey, PersistentDataType.LONG, 15000L);
+                    int bullets = container.getOrDefault(bulletskey, PersistentDataType.INTEGER, 1);
+
+                    long now = System.currentTimeMillis();
+                    long last = shulkercooldowns.getOrDefault(player.getUniqueId(), 0L);
+                    if (now - last < itemCooldown) {
+                        player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 1.0F, 1.0F);
+                        player.sendActionBar(Component.text("Under cooldown!").color(NamedTextColor.RED));
+                        return;
+                    }
+
+                    LivingEntity target = getNearestTarget(player, 15);
+
+                    if (target != null) {
+                        shulkercooldowns.put(player.getUniqueId(), now);
+
+                        if (target instanceof Player player1) {
+                            player.sendActionBar(Component.text("Targeting: "+player1.getName()).color(NamedTextColor.WHITE));
+                        }
+
+                        player.getLocation().getWorld().playSound(
+                                player.getLocation(),
+                                org.bukkit.Sound.ENTITY_SHULKER_SHOOT,
+                                1.0f,
+                                1.0f
+                        );
+
+                        for (int i = 0; i < bullets; i++) {
+                            ShulkerBullet bullet = (ShulkerBullet) player.getWorld().spawnEntity(
+                                    player.getEyeLocation().add(player.getLocation().getDirection().multiply(1)),
+                                    EntityType.SHULKER_BULLET
+                            );
+
+                            bullet.setTarget(target);
+                        }
+                    } else {
+                        player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 1.0F, 1.0F);
+                        player.sendActionBar(Component.text("No entity found!").color(NamedTextColor.RED));
+                    }
+                }
+            }
+        }
+    }
+
+    private LivingEntity getNearestTarget(Player source, double range) {
+        World world = source.getWorld();
+        Location loc = source.getLocation();
+        LivingEntity nearest = null;
+        double nearestDistance = Double.MAX_VALUE;
+
+        for (Entity e : world.getNearbyEntities(loc, range, range, range)) {
+            if (!(e instanceof LivingEntity)) continue;
+            LivingEntity le = (LivingEntity) e;
+
+            if (le.equals(source)) continue;
+
+            if (le instanceof Player) {
+                double dist = le.getLocation().distanceSquared(loc);
+                if (dist < nearestDistance) {
+                    nearest = le;
+                    nearestDistance = dist;
+                }
+            }
+        }
+        if (nearest == null) {
+            for (Entity e : world.getNearbyEntities(loc, range, range, range)) {
+                if (!(e instanceof Monster)) continue;
+                LivingEntity le = (LivingEntity) e;
+
+                double dist = le.getLocation().distanceSquared(loc);
+                if (dist < nearestDistance) {
+                    nearest = le;
+                    nearestDistance = dist;
+                }
+            }
+        }
+
+        return nearest;
     }
 }

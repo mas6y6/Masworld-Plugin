@@ -7,10 +7,7 @@ import com.mas6y6.masworld.Weapons.Attributes.DynamitePower;
 import com.mas6y6.masworld.Weapons.Attributes.SpecialEffect;
 import com.mas6y6.masworld.Weapons.Attributes.WeaponDamage;
 import com.mas6y6.masworld.Weapons.Attributes.*;
-import com.mojang.brigadier.arguments.DoubleArgumentType;
-import com.mojang.brigadier.arguments.FloatArgumentType;
-import com.mojang.brigadier.arguments.LongArgumentType;
-import com.mojang.brigadier.arguments.StringArgumentType;
+import com.mojang.brigadier.arguments.*;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
@@ -30,6 +27,8 @@ public class Weapons {
     public DynamiteFuse dynamiteFuse;
     public WeaponDamage weaponDamage;
     public WeaponCooldown weaponCooldown;
+    public ShulkerSwordCooldown shulkerSwordCooldown;
+    public ShulkerSwordBullet shulkerSwordBullet;
     
     public Weapons(Masworld main) {
         this.main = main;
@@ -40,6 +39,8 @@ public class Weapons {
         this.dynamiteFuse = new DynamiteFuse(this.main);
         this.weaponDamage = new WeaponDamage(this.main);
         this.weaponCooldown = new WeaponCooldown(this.main);
+        this.shulkerSwordCooldown = new ShulkerSwordCooldown(this.main);
+        this.shulkerSwordBullet = new ShulkerSwordBullet(this.main);
     }
 
     public LiteralArgumentBuilder<CommandSourceStack> buildCommands() {
@@ -64,12 +65,42 @@ public class Weapons {
                 )
                 .then(
                         Commands.literal("change")
-                                .then(Commands.argument("value", FloatArgumentType.floatArg(1.0f,100.f))
+                                .then(Commands.argument("value", FloatArgumentType.floatArg(1.0f,255.f))
                                         .executes(dynamitePower::set)
                                 )
                 )
                 .then(
                         Commands.literal("reset").executes(dynamitePower::reset)
+                )
+        );
+
+        commands.then(Commands.literal("shulker_sword_cooldown")
+                .then(
+                        Commands.literal("get").executes(shulkerSwordCooldown::get)
+                )
+                .then(
+                        Commands.literal("change")
+                                .then(Commands.argument("value", LongArgumentType.longArg())
+                                        .executes(shulkerSwordCooldown::set)
+                                )
+                )
+                .then(
+                        Commands.literal("reset").executes(shulkerSwordCooldown::reset)
+                )
+        );
+
+        commands.then(Commands.literal("shulker_sword_bullet")
+                .then(
+                        Commands.literal("get").executes(shulkerSwordBullet::get)
+                )
+                .then(
+                        Commands.literal("change")
+                                .then(Commands.argument("value", IntegerArgumentType.integer())
+                                        .executes(shulkerSwordBullet::set)
+                                )
+                )
+                .then(
+                        Commands.literal("reset").executes(shulkerSwordBullet::reset)
                 )
         );
 

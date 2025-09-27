@@ -32,4 +32,24 @@ public class TextSymbols {
             .append(Component.text("?").color(NamedTextColor.LIGHT_PURPLE).decorate(TextDecoration.BOLD))
             .append(Component.text("]").color(NamedTextColor.DARK_GRAY))
             .append(Component.text(" ").color(NamedTextColor.WHITE));
+
+    public static Component warning(String text) {
+        return WARNING.append(Component.text(text).color(NamedTextColor.YELLOW));
+    }
+
+    public static Component error(String text) {
+        return WARNING.append(Component.text(text).color(NamedTextColor.RED));
+    }
+
+    public static Component question(String text) {
+        return WARNING.append(Component.text(text).color(NamedTextColor.LIGHT_PURPLE));
+    }
+
+    public static Component info(String text) {
+        return WARNING.append(Component.text(text).color(NamedTextColor.WHITE));
+    }
+
+    public static Component success(String text) {
+        return WARNING.append(Component.text(text).color(NamedTextColor.GREEN));
+    }
 }

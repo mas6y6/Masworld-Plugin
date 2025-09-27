@@ -92,6 +92,8 @@ public class MasworldPluginBootstrap implements PluginBootstrap {
             registrar.addToTag(EnchantmentTagKeys.NON_TREASURE, Set.of(ITEMMAGNET_KEY));
 
             registrar.addToTag(EnchantmentTagKeys.DOUBLE_TRADE_PRICE,Set.of(MULTIXP_KEY));
+            registrar.addToTag(EnchantmentTagKeys.DOUBLE_TRADE_PRICE,Set.of(ITEMMAGNET_KEY));
+            registrar.addToTag(EnchantmentTagKeys.DOUBLE_TRADE_PRICE,Set.of(MULTIMINE_KEY));
         });
     }
 }
