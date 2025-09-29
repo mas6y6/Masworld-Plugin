@@ -74,6 +74,7 @@ public final class Masworld extends JavaPlugin {
             root.then(weapons.buildCommands());
 
             commands.registrar().register(root.build());
+
             commands.registrar().register(weapons.buildAdminStickCMD().build());
         });
 
@@ -127,5 +128,9 @@ public final class Masworld extends JavaPlugin {
             }
         }
         getLogger().info("Reload Complete");
+    }
+
+    public MasEconomy getEconomy() {
+        return this.maseconomy;
     }
 }

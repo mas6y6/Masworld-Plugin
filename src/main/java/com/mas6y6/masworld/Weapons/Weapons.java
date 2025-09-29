@@ -29,6 +29,7 @@ public class Weapons {
     public WeaponCooldown weaponCooldown;
     public ShulkerSwordCooldown shulkerSwordCooldown;
     public ShulkerSwordBullet shulkerSwordBullet;
+    public ShulkerSwordRange shulkerSwordRange;
     
     public Weapons(Masworld main) {
         this.main = main;
@@ -41,6 +42,7 @@ public class Weapons {
         this.weaponCooldown = new WeaponCooldown(this.main);
         this.shulkerSwordCooldown = new ShulkerSwordCooldown(this.main);
         this.shulkerSwordBullet = new ShulkerSwordBullet(this.main);
+        this.shulkerSwordRange = new ShulkerSwordRange(this.main);
     }
 
     public LiteralArgumentBuilder<CommandSourceStack> buildCommands() {
@@ -89,13 +91,28 @@ public class Weapons {
                 )
         );
 
+        commands.then(Commands.literal("shulker_sword_range")
+                .then(
+                        Commands.literal("get").executes(shulkerSwordRange::get)
+                )
+                .then(
+                        Commands.literal("change")
+                                .then(Commands.argument("value", DoubleArgumentType.doubleArg(0,255))
+                                        .executes(shulkerSwordRange::set)
+                                )
+                )
+                .then(
+                        Commands.literal("reset").executes(shulkerSwordRange::reset)
+                )
+        );
+
         commands.then(Commands.literal("shulker_sword_bullet")
                 .then(
                         Commands.literal("get").executes(shulkerSwordBullet::get)
                 )
                 .then(
                         Commands.literal("change")
-                                .then(Commands.argument("value", IntegerArgumentType.integer())
+                                .then(Commands.argument("value", IntegerArgumentType.integer(1))
                                         .executes(shulkerSwordBullet::set)
                                 )
                 )

@@ -379,9 +379,10 @@ public class Listeners implements Listener {
 
     @EventHandler
     public void shulkerSword(PlayerInteractEvent event) {
-        NamespacedKey special_effectkey = new NamespacedKey(this.weapons.main, "special_effect");
+        NamespacedKey special_effectKey = new NamespacedKey(this.weapons.main, "special_effect");
         NamespacedKey cooldownKey = new NamespacedKey(this.weapons.main, "shulker_sword_cooldown");
-        NamespacedKey bulletskey = new NamespacedKey(this.weapons.main, "shulker_sword_bullet");
+        NamespacedKey bulletsKey = new NamespacedKey(this.weapons.main, "shulker_sword_bullet");
+        NamespacedKey rangeKey = new NamespacedKey(this.weapons.main, "shulker_sword_range");
 
         ItemStack item = event.getItem();
         if (item == null) return;
@@ -391,15 +392,16 @@ public class Listeners implements Listener {
 
         PersistentDataContainer container = meta.getPersistentDataContainer();
 
-        if (container.has(special_effectkey, PersistentDataType.STRING)) {
-            String value = container.get(special_effectkey, PersistentDataType.STRING);
+        if (container.has(special_effectKey, PersistentDataType.STRING)) {
+            String value = container.get(special_effectKey, PersistentDataType.STRING);
             if ("shulker_sword".equals(value)) {
                 if (event.getAction() == Action.RIGHT_CLICK_AIR || event.getAction() == Action.RIGHT_CLICK_BLOCK) {
                     Player player = event.getPlayer();
 
                     // Check cooldown value from item, default to 15000ms
                     long itemCooldown = container.getOrDefault(cooldownKey, PersistentDataType.LONG, 15000L);
-                    int bullets = container.getOrDefault(bulletskey, PersistentDataType.INTEGER, 1);
+                    int bullets = container.getOrDefault(bulletsKey, PersistentDataType.INTEGER, 1);
+                    double range = container.getOrDefault(rangeKey, PersistentDataType.DOUBLE, 15.0);
 
                     long now = System.currentTimeMillis();
                     long last = shulkercooldowns.getOrDefault(player.getUniqueId(), 0L);
@@ -409,13 +411,20 @@ public class Listeners implements Listener {
                         return;
                     }
 
-                    LivingEntity target = getNearestTarget(player, 15);
+                    LivingEntity target = getNearestTarget(player, range);
 
                     if (target != null) {
                         shulkercooldowns.put(player.getUniqueId(), now);
 
                         if (target instanceof Player player1) {
-                            player.sendActionBar(Component.text("Targeting: "+player1.getName()).color(NamedTextColor.WHITE));
+                            player.sendActionBar(
+                                    Component.text("Shulker sword targeting: ")
+                                            .color(NamedTextColor.WHITE)
+                                            .append(
+                                                    Component.text(player1.getName())
+                                                            .color(NamedTextColor.GREEN)
+                                            )
+                            );
                         }
 
                         player.getLocation().getWorld().playSound(
@@ -449,17 +458,16 @@ public class Listeners implements Listener {
         double nearestDistance = Double.MAX_VALUE;
 
         for (Entity e : world.getNearbyEntities(loc, range, range, range)) {
-            if (!(e instanceof LivingEntity)) continue;
-            LivingEntity le = (LivingEntity) e;
+            if (!(e instanceof Player)) continue;
+            Player target = (Player) e;
 
-            if (le.equals(source)) continue;
+            if (target.equals(source)) continue;
+            if (target.getGameMode() != GameMode.SURVIVAL) continue;
 
-            if (le instanceof Player) {
-                double dist = le.getLocation().distanceSquared(loc);
-                if (dist < nearestDistance) {
-                    nearest = le;
-                    nearestDistance = dist;
-                }
+            double dist = target.getLocation().distanceSquared(loc);
+            if (dist < nearestDistance) {
+                nearest = target;
+                nearestDistance = dist;
             }
         }
         if (nearest == null) {
