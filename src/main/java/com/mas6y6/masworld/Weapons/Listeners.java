@@ -485,4 +485,57 @@ public class Listeners implements Listener {
 
         return nearest;
     }
+
+    private final Map<UUID, Long> evokercooldowns = new HashMap<>();
+
+    @EventHandler
+    public void evokerBook(PlayerInteractEvent event) {
+        NamespacedKey special_effectKey = new NamespacedKey(this.weapons.main, "special_effect"); // STR
+        NamespacedKey evoker_book_range = new NamespacedKey(this.weapons.main, "evoker_book_range"); // INT
+        NamespacedKey evoker_book_spacing = new NamespacedKey(this.weapons.main, "evoker_book_spacing"); // DOUBLE
+        NamespacedKey evoker_book_cooldown = new NamespacedKey(this.weapons.main, "evoker_book_cooldown"); // LONG
+
+        ItemStack item = event.getItem();
+        if (item == null) return;
+
+        ItemMeta meta = item.getItemMeta();
+        if (meta == null) return;
+
+        PersistentDataContainer container = meta.getPersistentDataContainer();
+
+        long itemCooldown = container.getOrDefault(evoker_book_cooldown, PersistentDataType.LONG, 30000L);
+
+        long now = System.currentTimeMillis();
+        long last = evokercooldowns.getOrDefault(event.getPlayer().getUniqueId(), 0L);
+        if (now - last < itemCooldown) {
+            event.getPlayer().playSound(event.getPlayer().getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 1.0F, 1.0F);
+            event.getPlayer().sendActionBar(Component.text("Under cooldown!").color(NamedTextColor.RED));
+            return;
+        }
+
+        if (container.has(special_effectKey, PersistentDataType.STRING)) {
+            if (Objects.equals(container.get(special_effectKey, PersistentDataType.STRING), "evoker_book")) {
+                World world = event.getPlayer().getWorld();
+
+                Vector direction = event.getPlayer().getEyeLocation().getDirection().normalize();
+
+                double spacing = container.getOrDefault(evoker_book_spacing, PersistentDataType.DOUBLE, 1.0);
+                int count = container.getOrDefault(evoker_book_range, PersistentDataType.INTEGER, 8);
+
+                evokercooldowns.put(event.getPlayer().getUniqueId(), now);
+
+                for (int i = 1; i <= count; i++) {
+                    Location baseLoc = event.getPlayer().getLocation().clone()
+                            .add(direction.clone().multiply(1));
+
+                    Location fangLoc = baseLoc.clone().add(direction.clone().multiply(i * spacing));
+                    fangLoc.setY(world.getHighestBlockYAt(fangLoc) + 1);
+
+                    EvokerFangs fangs = (EvokerFangs) world.spawnEntity(fangLoc, EntityType.EVOKER_FANGS);
+                    fangs.setOwner(event.getPlayer());
+                }
+            }
+        }
+
+    }
 }

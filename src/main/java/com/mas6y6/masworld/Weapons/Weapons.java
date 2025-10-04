@@ -23,26 +23,40 @@ public class Weapons {
     public LiteralArgumentBuilder<CommandSourceStack> adminStickCMD = Commands.literal("iwantadminstick");
 
     public SpecialEffect specialEffect;
+
     public DynamitePower dynamitePower;
     public DynamiteFuse dynamiteFuse;
+
     public WeaponDamage weaponDamage;
     public WeaponCooldown weaponCooldown;
+
     public ShulkerSwordCooldown shulkerSwordCooldown;
     public ShulkerSwordBullet shulkerSwordBullet;
     public ShulkerSwordRange shulkerSwordRange;
+
+    public EvokerBookCooldown evokerBookCooldown;
+    public EvokerBookSpacing evokerBookSpacing;
+    public EvokerBookRange evokerBookRange;
     
     public Weapons(Masworld main) {
         this.main = main;
         this.main.getServer().getPluginManager().registerEvents(new Listeners(this), this.main);
 
         this.specialEffect = new SpecialEffect(this.main);
+
         this.dynamitePower = new DynamitePower(this.main);
         this.dynamiteFuse = new DynamiteFuse(this.main);
+
         this.weaponDamage = new WeaponDamage(this.main);
         this.weaponCooldown = new WeaponCooldown(this.main);
+
         this.shulkerSwordCooldown = new ShulkerSwordCooldown(this.main);
         this.shulkerSwordBullet = new ShulkerSwordBullet(this.main);
         this.shulkerSwordRange = new ShulkerSwordRange(this.main);
+
+        this.evokerBookCooldown = new EvokerBookCooldown(this.main);
+        this.evokerBookSpacing = new EvokerBookSpacing(this.main);
+        this.evokerBookRange = new EvokerBookRange(this.main);
     }
 
     public LiteralArgumentBuilder<CommandSourceStack> buildCommands() {
@@ -151,18 +165,48 @@ public class Weapons {
                 )
         );
 
-        commands.then(Commands.literal("weapon_cooldown")
+        commands.then(Commands.literal("evoker_book_cooldown")
                 .then(
-                        Commands.literal("get").executes(weaponCooldown::get)
+                        Commands.literal("get").executes(evokerBookCooldown::get)
+                )
+                .then(
+                        Commands.literal("change")
+                                .then(Commands.argument("value", LongArgumentType.longArg())
+                                        .executes(evokerBookCooldown::set)
+                                )
+                )
+                .then(
+                        Commands.literal("reset").executes(evokerBookCooldown::reset)
+                )
+        );
+
+        commands.then(Commands.literal("evoker_book_range")
+                .then(
+                        Commands.literal("get").executes(evokerBookRange::get)
+                )
+                .then(
+                        Commands.literal("change")
+                                .then(Commands.argument("value", IntegerArgumentType.integer(1))
+                                        .executes(evokerBookRange::set)
+                                )
+                )
+                .then(
+                        Commands.literal("reset").executes(evokerBookRange::reset)
+                )
+        );
+
+        commands.then(Commands.literal("evoker_book_spacing")
+                .then(
+                        Commands.literal("get").executes(evokerBookSpacing::get)
                 )
                 .then(
                         Commands.literal("change")
                                 .then(Commands.argument("value", DoubleArgumentType.doubleArg())
-                                        .executes(weaponCooldown::change)
+                                        .executes(evokerBookSpacing::set)
                                 )
                 )
                 .then(
-                        Commands.literal("reset").executes(weaponCooldown::reset)
+                        Commands.literal("reset").executes(evokerBookSpacing::reset)
                 )
         );
 
