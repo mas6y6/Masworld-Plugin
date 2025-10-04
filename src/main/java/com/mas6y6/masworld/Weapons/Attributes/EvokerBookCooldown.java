@@ -33,7 +33,7 @@ public class EvokerBookCooldown{
             }
         }
 
-        NamespacedKey namespace = new NamespacedKey(this.main, "attributetarget");
+        NamespacedKey namespace = new NamespacedKey(this.main, attributetarget);
 
         player.getInventory().getItemInMainHand().editMeta(meta -> {
             meta.getPersistentDataContainer().set(namespace, PersistentDataType.LONG, value);

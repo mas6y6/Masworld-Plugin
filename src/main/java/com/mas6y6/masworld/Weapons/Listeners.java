@@ -503,39 +503,56 @@ public class Listeners implements Listener {
 
         PersistentDataContainer container = meta.getPersistentDataContainer();
 
+        // Default cooldown = 30s
         long itemCooldown = container.getOrDefault(evoker_book_cooldown, PersistentDataType.LONG, 30000L);
 
         long now = System.currentTimeMillis();
-        long last = evokercooldowns.getOrDefault(event.getPlayer().getUniqueId(), 0L);
+        UUID uuid = event.getPlayer().getUniqueId();
+        long last = evokercooldowns.getOrDefault(uuid, 0L);
+
         if (now - last < itemCooldown) {
+            long remaining = (itemCooldown - (now - last)) / 1000; // show seconds
             event.getPlayer().playSound(event.getPlayer().getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 1.0F, 1.0F);
-            event.getPlayer().sendActionBar(Component.text("Under cooldown!").color(NamedTextColor.RED));
+            event.getPlayer().sendActionBar(Component.text("Cooldown: " + remaining + "s").color(NamedTextColor.RED));
             return;
         }
 
-        if (container.has(special_effectKey, PersistentDataType.STRING)) {
-            if (Objects.equals(container.get(special_effectKey, PersistentDataType.STRING), "evoker_book")) {
-                World world = event.getPlayer().getWorld();
+        if (!container.has(special_effectKey, PersistentDataType.STRING)) return;
+        if (!Objects.equals(container.get(special_effectKey, PersistentDataType.STRING), "evoker_book")) return;
 
-                Vector direction = event.getPlayer().getEyeLocation().getDirection().normalize();
+        World world = event.getPlayer().getWorld();
+        Vector direction = event.getPlayer().getEyeLocation().getDirection().normalize();
 
-                double spacing = container.getOrDefault(evoker_book_spacing, PersistentDataType.DOUBLE, 1.0);
-                int count = container.getOrDefault(evoker_book_range, PersistentDataType.INTEGER, 8);
+        double spacing = container.getOrDefault(evoker_book_spacing, PersistentDataType.DOUBLE, 1.0);
+        int count = container.getOrDefault(evoker_book_range, PersistentDataType.INTEGER, 8);
 
-                evokercooldowns.put(event.getPlayer().getUniqueId(), now);
+        Location baseLoc = event.getPlayer().getLocation().clone().add(direction.clone().multiply(1));
 
-                for (int i = 1; i <= count; i++) {
-                    Location baseLoc = event.getPlayer().getLocation().clone()
-                            .add(direction.clone().multiply(1));
+        Vector[] beams = new Vector[]{
+                direction,
+                rotateVector(direction.clone(), -25.0),
+                rotateVector(direction.clone(), 25.0)
+        };
 
-                    Location fangLoc = baseLoc.clone().add(direction.clone().multiply(i * spacing));
-                    fangLoc.setY(world.getHighestBlockYAt(fangLoc) + 1);
+        for (Vector beamDir : beams) {
+            for (int i = 1; i <= count; i++) {
+                Location fangLoc = baseLoc.clone().add(beamDir.clone().multiply(i * spacing));
+                fangLoc.setY(world.getHighestBlockYAt(fangLoc) + 1);
 
-                    EvokerFangs fangs = (EvokerFangs) world.spawnEntity(fangLoc, EntityType.EVOKER_FANGS);
-                    fangs.setOwner(event.getPlayer());
-                }
+                EvokerFangs fangs = (EvokerFangs) world.spawnEntity(fangLoc, EntityType.EVOKER_FANGS);
+                fangs.setOwner(event.getPlayer());
             }
         }
 
+        evokercooldowns.put(uuid, now);
+    }
+
+    private Vector rotateVector(Vector v, double degrees) {
+        double radians = Math.toRadians(degrees);
+        double cos = Math.cos(radians);
+        double sin = Math.sin(radians);
+        double x = v.getX() * cos - v.getZ() * sin;
+        double z = v.getX() * sin + v.getZ() * cos;
+        return new Vector(x, v.getY(), z).normalize();
     }
 }
