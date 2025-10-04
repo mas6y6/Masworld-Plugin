@@ -521,7 +521,10 @@ public class Listeners implements Listener {
         if (!Objects.equals(container.get(special_effectKey, PersistentDataType.STRING), "evoker_book")) return;
 
         World world = event.getPlayer().getWorld();
-        Vector direction = event.getPlayer().getEyeLocation().getDirection().normalize();
+
+        Vector direction = event.getPlayer().getEyeLocation().getDirection().clone();
+        direction.setY(0);
+        direction.normalize();
 
         double spacing = container.getOrDefault(evoker_book_spacing, PersistentDataType.DOUBLE, 1.0);
         int count = container.getOrDefault(evoker_book_range, PersistentDataType.INTEGER, 8);
@@ -530,9 +533,10 @@ public class Listeners implements Listener {
 
         Vector[] beams = new Vector[]{
                 direction,
-                rotateVector(direction.clone(), -50.0),
-                rotateVector(direction.clone(), 50.0)
+                rotateVector(direction.clone(), -45.0),
+                rotateVector(direction.clone(), 45.0)
         };
+
 
         for (Vector beamDir : beams) {
             for (int i = 1; i <= count; i++) {
