@@ -526,12 +526,12 @@ public class Listeners implements Listener {
         double spacing = container.getOrDefault(evoker_book_spacing, PersistentDataType.DOUBLE, 1.0);
         int count = container.getOrDefault(evoker_book_range, PersistentDataType.INTEGER, 8);
 
-        Location baseLoc = event.getPlayer().getLocation().clone().add(direction.clone().multiply(1));
+        Location baseLoc = event.getPlayer().getLocation().clone().add(direction.clone().multiply(3));
 
         Vector[] beams = new Vector[]{
                 direction,
-                rotateVector(direction.clone(), -25.0),
-                rotateVector(direction.clone(), 25.0)
+                rotateVector(direction.clone(), -50.0),
+                rotateVector(direction.clone(), 50.0)
         };
 
         for (Vector beamDir : beams) {
