@@ -1,255 +1,33 @@
 package com.mas6y6.masworld.Weapons;
 
 import com.mas6y6.masworld.Masworld;
-import com.mas6y6.masworld.Objects.Utils;
-import io.papermc.paper.registry.RegistryAccess;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
-import net.kyori.adventure.title.TitlePart;
 import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
-import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
-import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.entity.EntityShootBowEvent;
 import org.bukkit.event.entity.ProjectileHitEvent;
 import org.bukkit.event.entity.ProjectileLaunchEvent;
-import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
-import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.inventory.ItemStack;
-import io.papermc.paper.registry.RegistryKey;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Vector;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
 
-public class Listeners implements Listener {
+public class WeaponListeners implements Listener {
     public Weapons weapons;
-    private final Map<UUID, Long> cooldowns = new HashMap<>();
-    private final long COOLDOWN_MS = 200;
 
-    private final Set<UUID> recentlyDropped = new HashSet<>();
-    private final int dropCooldownTicks = 20;
-
-
-    public Listeners(Weapons weapons) {
+    public WeaponListeners(Weapons weapons) {
         this.weapons = weapons;
-
-        Bukkit.getScheduler().runTaskTimer(this.weapons.main,() -> {
-            for (Player player : this.weapons.main.getServer().getOnlinePlayers()) {
-                ItemMagnet(player);
-            }
-        }, 0L,20L);
-    }
-
-    @EventHandler
-    public void onPlayerDropItem(PlayerDropItemEvent event) {
-
-        Item dropped = event.getItemDrop();
-        recentlyDropped.add(dropped.getUniqueId());
-
-        Bukkit.getScheduler().runTaskLater(this.weapons.main, () -> {
-            recentlyDropped.remove(dropped.getUniqueId());
-        }, dropCooldownTicks);
-    }
-
-
-    @EventHandler
-    public void onBlockBreakXP(BlockBreakEvent event) {
-        Player player = event.getPlayer();
-        ItemStack item = player.getInventory().getItemInMainHand();
-
-        NamespacedKey multiXpKey = new NamespacedKey("masworld", "multixp");
-        Enchantment multiXp = RegistryAccess.registryAccess().getRegistry(RegistryKey.ENCHANTMENT).get(multiXpKey);
-
-        if (multiXp == null) return;
-
-        if (item.containsEnchantment(multiXp)) {
-            if (player.getGameMode() != GameMode.CREATIVE) {
-                if (Utils.isOre(event.getBlock())) {
-                    int level = item.getEnchantmentLevel(multiXp);
-                    if (level <= 0) {
-                        level = 1;
-                    }
-
-                    int xp = 2 * level + 1;
-
-                    event.getBlock().getWorld().spawn(
-                            event.getBlock().getLocation().add(0.5, 0.5, 0.5),
-                            ExperienceOrb.class,
-                            orb -> orb.setExperience(xp)
-                    );
-                }
-            }
-        }
-    }
-
-    @EventHandler
-    public void onBlockBreak(BlockBreakEvent event) {
-        Player player = event.getPlayer();
-        ItemStack item = player.getInventory().getItemInMainHand();
-
-        NamespacedKey multiMineKey = new NamespacedKey("masworld", "multimine");
-        NamespacedKey multiXpKey = new NamespacedKey("masworld", "multixp");
-
-        Enchantment multiMine = RegistryAccess.registryAccess().getRegistry(RegistryKey.ENCHANTMENT).get(multiMineKey);
-        Enchantment multiXp = RegistryAccess.registryAccess().getRegistry(RegistryKey.ENCHANTMENT).get(multiXpKey);
-        if (multiMine == null) return;
-        if (multiXp == null) return;
-        if (!item.containsEnchantment(multiMine)) return;
-
-        int level = item.getEnchantmentLevel(multiMine);
-        int radius = level;
-        int forwardOffset = level;
-        int upOffset = level - 1;
-
-        int xpmultiplier = Math.max(1, item.getEnchantmentLevel(multiXp)) + 1;
-
-        Block startBlock = event.getBlock();
-        World world = startBlock.getWorld();
-
-        int centerX = startBlock.getX() + player.getFacing().getModX() * forwardOffset;
-        int centerY = startBlock.getY() + upOffset;
-        int centerZ = startBlock.getZ() + player.getFacing().getModZ() * forwardOffset;
-
-        for (int dx = -radius; dx <= radius; dx++) {
-            for (int dy = -radius; dy <= radius; dy++) {
-                for (int dz = -radius; dz <= radius; dz++) {
-                    Block target = world.getBlockAt(centerX + dx, centerY + dy, centerZ + dz);
-
-                    if (target.isEmpty() || target.getType().getHardness() < 0) continue;
-
-                    if (item.getItemMeta() instanceof org.bukkit.inventory.meta.Damageable meta) {
-                        if (meta.getDamage() >= item.getType().getMaxDurability()) {
-                            item.setAmount(0);
-                            return;
-                        }
-
-                        if (!(target.isEmpty())) {
-                            meta.setDamage(meta.getDamage() + 1);
-                        }
-                        item.setItemMeta(meta);
-
-                        target.breakNaturally(item);
-
-
-                        world.spawnParticle(Particle.BLOCK_CRUMBLE, target.getLocation().add(0.5, 0.5, 0.5),
-                                10, 0.3, 0.3, 0.3, target.getBlockData());
-
-                        Color color = Color.fromRGB(255, 255, 255);
-
-                        float scale = 0.8f;
-                        Particle.DustOptions dustOptions = new Particle.DustOptions(color, scale);
-
-                        player.getWorld().spawnParticle(Particle.DUST, target.getLocation(), 5, 0, 0, 0, 0, dustOptions);
-
-
-                        if (player.getGameMode() != GameMode.CREATIVE) {
-                            if (Utils.isXPOre(event.getBlock())) {
-                                int xp = Utils.getOreXP(target);
-                                world.spawn(target.getLocation().add(0.5, 0.5, 0.5),
-                                        org.bukkit.entity.ExperienceOrb.class, orb -> orb.setExperience(xp));
-                            }
-
-                            if (item.containsEnchantment(multiXp)) {
-                                world.spawn(target.getLocation().add(0.5, 0.5, 0.5),
-                                        org.bukkit.entity.ExperienceOrb.class, orb -> orb.setExperience(2 * xpmultiplier));
-                            }
-                        }
-
-                        if (meta.getDamage() >= item.getType().getMaxDurability()) {
-                            world.playSound(player.getLocation(), Sound.ENTITY_ITEM_BREAK, 1.0f, 1.0f);
-                            player.getInventory().setItemInMainHand(null);
-                            item.setAmount(0);
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    @EventHandler
-    public void onPlayerMove(PlayerMoveEvent event) {
-        ItemMagnet(event.getPlayer());
-    }
-
-    public void ItemMagnet(Player player) {
-        if (player.getGameMode() != GameMode.SURVIVAL) return;
-
-        long now = System.currentTimeMillis();
-        long last = cooldowns.getOrDefault(player.getUniqueId(), 0L);
-        if (now - last < COOLDOWN_MS) {
-            return;
-        }
-        cooldowns.put(player.getUniqueId(), now);
-
-        ItemStack boots = player.getInventory().getBoots();
-        if (boots == null) {
-            return;
-        }
-
-        if (boots.isEmpty()) {
-            return;
-        }
-
-        NamespacedKey key = new NamespacedKey("masworld", "itemmagnet");
-        Enchantment itemMagnet = RegistryAccess.registryAccess()
-                .getRegistry(RegistryKey.ENCHANTMENT)
-                .get(key);
-
-        if (itemMagnet == null) {
-            return;
-        }
-
-        if (!boots.containsEnchantment(itemMagnet)) {
-            return;
-        }
-
-        int level = boots.getEnchantmentLevel(itemMagnet);
-        double radius = 2.0 + (level * 2.0);
-
-        int pulled = 0;
-
-        spawnMagnetParticles(player, radius);
-
-        for (Entity e : player.getNearbyEntities(radius, radius, radius)) {
-            if (e instanceof Item dropped) {
-                if (recentlyDropped.contains(dropped.getUniqueId())) continue; // skip
-                dropped.teleport(player.getLocation().add(0, 0.5, 0));
-            }
-        }
-    }
-
-    private void spawnMagnetParticles(Player player, double radius) {
-        Location center = player.getLocation().add(0, 1, 0);
-        int points = Math.max(10, (int) (10 * radius));
-
-        for (int i = 0; i < points; i++) {
-            double angle = 2 * Math.PI * i / points;
-            double x = radius * Math.cos(angle);
-            double z = radius * Math.sin(angle);
-
-            Location particleLoc = center.clone().add(x, 0, z);
-            Color color = Color.fromRGB(
-                    (int) (0.69 * 255),
-                    (int) (0.44 * 255),
-                    (int) (1.0 * 255)
-            );
-
-            float scale = 0.8f;
-            Particle.DustOptions dustOptions = new Particle.DustOptions(color, scale);
-
-            player.getWorld().spawnParticle(Particle.DUST, particleLoc, 1, 0, 0, 0, 0, dustOptions);
-        }
     }
 
     @EventHandler
@@ -495,6 +273,8 @@ public class Listeners implements Listener {
     public void evokerBook(PlayerInteractEvent event) {
         NamespacedKey special_effectKey = new NamespacedKey(this.weapons.main, "special_effect"); // STR
         NamespacedKey evoker_book_range = new NamespacedKey(this.weapons.main, "evoker_book_range"); // INT
+        NamespacedKey evoker_book_angle = new NamespacedKey(this.weapons.main, "evoker_book_angle"); // INT
+        NamespacedKey evoker_book_beamcount = new NamespacedKey(this.weapons.main, "evoker_book_beamcount"); // INT
         NamespacedKey evoker_book_spacing = new NamespacedKey(this.weapons.main, "evoker_book_spacing"); // DOUBLE
         NamespacedKey evoker_book_cooldown = new NamespacedKey(this.weapons.main, "evoker_book_cooldown"); // LONG
 
@@ -526,10 +306,10 @@ public class Listeners implements Listener {
 
         Player player = event.getPlayer();
 
-        int beamCount = 10;
+        int beamCount = container.getOrDefault(evoker_book_beamcount, PersistentDataType.INTEGER, 10);
         double spacing = container.getOrDefault(evoker_book_spacing, PersistentDataType.DOUBLE, 1.0);
         int beamLength = container.getOrDefault(evoker_book_range, PersistentDataType.INTEGER, beamCount);
-        double totalAngle = 180.0;
+        double totalAngle = container.getOrDefault(evoker_book_angle, PersistentDataType.DOUBLE, 180.0);
         double fangGap = 3.0;
 
         Vector direction = player.getEyeLocation().getDirection().clone();
@@ -589,7 +369,6 @@ public class Listeners implements Listener {
 
         spawnFangsRunnable.run();
         Bukkit.getScheduler().runTaskLater(plugin, spawnFangsRunnable, 30L);
-
 
         evokercooldowns.put(uuid, now);
     }

@@ -9,6 +9,7 @@ import net.kyori.adventure.text.format.TextColor;
 import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.enchantments.Enchantment;
+import org.bukkit.entity.Player;
 import org.bukkit.potion.PotionEffectType;
 import org.jetbrains.annotations.NotNull;
 
@@ -144,10 +145,46 @@ public class Utils {
         return icon.append(text);
     }
 
-    // Overload method with TextColor (hex or custom)
     public static Component createEnchantmentComponent(String unicode, TextColor color, String title) {
         Component icon = Component.text(unicode).color(color);
         Component text = Component.text(" " + title);
         return icon.append(text);
+    }
+
+    private static int getExpAtLevel(int level) {
+        if (level <= 16) {
+            return level * level + 6 * level;
+        }
+        if (level <= 31) {
+            return (int) (2.5 * level * level - 40.5 * level + 360);
+        }
+        return (int) (4.5 * level * level - 162.5 * level + 2220);
+    }
+
+    public static void takeExpPoints(Player player, int points) {
+        int total = getTotalExp(player);
+        int newTotal = Math.max(0, total - points);
+
+        player.setExp(0);
+        player.setLevel(0);
+        player.setTotalExperience(0);
+
+        player.giveExp(newTotal);
+    }
+    public static int getTotalExp(Player player) {
+        int level = player.getLevel();
+        float progress = player.getExp();
+
+        int expToNext;
+        if (level >= 30) {
+            expToNext = 9 * level - 158;
+        } else if (level >= 15) {
+            expToNext = 5 * level - 38;
+        } else {
+            expToNext = 2 * level + 7;
+        }
+
+        int expThisLevel = Math.round(progress * expToNext);
+        return getExpAtLevel(level) + expThisLevel;
     }
 }

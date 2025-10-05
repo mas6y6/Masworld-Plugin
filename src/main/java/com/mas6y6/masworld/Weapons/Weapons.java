@@ -15,7 +15,6 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.entity.Player;
-import org.bukkit.ChatColor;
 
 public class Weapons {
     public Masworld main;
@@ -37,10 +36,13 @@ public class Weapons {
     public EvokerBookCooldown evokerBookCooldown;
     public EvokerBookSpacing evokerBookSpacing;
     public EvokerBookRange evokerBookRange;
+    public EvokerBookAngle evokerBookAngle;
+    public EvokerBookBeamCount evokerBookBeamCount;
     
     public Weapons(Masworld main) {
         this.main = main;
-        this.main.getServer().getPluginManager().registerEvents(new Listeners(this), this.main);
+        this.main.getServer().getPluginManager().registerEvents(new WeaponListeners(this), this.main);
+        this.main.getServer().getPluginManager().registerEvents(new EnchantmentListeners(this), this.main);
 
         this.specialEffect = new SpecialEffect(this.main);
 
@@ -57,6 +59,8 @@ public class Weapons {
         this.evokerBookCooldown = new EvokerBookCooldown(this.main);
         this.evokerBookSpacing = new EvokerBookSpacing(this.main);
         this.evokerBookRange = new EvokerBookRange(this.main);
+        this.evokerBookAngle = new EvokerBookAngle(this.main);
+        this.evokerBookBeamCount = new EvokerBookBeamCount(this.main);
     }
 
     public LiteralArgumentBuilder<CommandSourceStack> buildCommands() {
@@ -207,6 +211,36 @@ public class Weapons {
                 )
                 .then(
                         Commands.literal("reset").executes(evokerBookSpacing::reset)
+                )
+        );
+
+        commands.then(Commands.literal("evoker_book_angle")
+                .then(
+                        Commands.literal("get").executes(evokerBookAngle::get)
+                )
+                .then(
+                        Commands.literal("change")
+                                .then(Commands.argument("value", DoubleArgumentType.doubleArg())
+                                        .executes(evokerBookAngle::set)
+                                )
+                )
+                .then(
+                        Commands.literal("reset").executes(evokerBookAngle::reset)
+                )
+        );
+
+        commands.then(Commands.literal("evoker_book_beamcount")
+                .then(
+                        Commands.literal("get").executes(evokerBookBeamCount::get)
+                )
+                .then(
+                        Commands.literal("change")
+                                .then(Commands.argument("value", IntegerArgumentType.integer(1))
+                                        .executes(evokerBookBeamCount::set)
+                                )
+                )
+                .then(
+                        Commands.literal("reset").executes(evokerBookBeamCount::reset)
                 )
         );
 

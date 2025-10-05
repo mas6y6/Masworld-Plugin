@@ -34,6 +34,7 @@ public class MasworldPluginBootstrap implements PluginBootstrap {
         final var MULTIMINE_KEY = EnchantmentKeys.create(Key.key("masworld:multimine"));
         final var MULTIXP_KEY = EnchantmentKeys.create(Key.key("masworld:multixp"));
         final var ITEMMAGNET_KEY = EnchantmentKeys.create(Key.key("masworld:itemmagnet"));
+        final var SHOCKER_KEY = EnchantmentKeys.create(Key.key("masworld:shocker"));
 
         manager.registerEventHandler(
                 RegistryEvents.ENCHANTMENT.compose().newHandler(event -> {
@@ -50,6 +51,20 @@ public class MasworldPluginBootstrap implements PluginBootstrap {
                     );
                 })
         );
+
+        manager.registerEventHandler(RegistryEvents.ENCHANTMENT.compose().newHandler(event -> {
+           event.registry().register(
+                   SHOCKER_KEY,
+                   builder -> builder.description(Utils.createEnchantmentComponent("\uefe5", TextColor.color(0x008efa),"Shocker"))
+                           .supportedItems(event.getOrCreateTag(ItemTypeTagKeys.ENCHANTABLE_SWORD))
+                           .anvilCost(7)
+                           .maxLevel(3)
+                           .weight(1)
+                           .minimumCost(EnchantmentRegistryEntry.EnchantmentCost.of(25, 1))
+                           .maximumCost(EnchantmentRegistryEntry.EnchantmentCost.of(70, 1))
+                           .activeSlots(EquipmentSlotGroup.MAINHAND)
+           );
+        }));
 
         manager.registerEventHandler(
                 RegistryEvents.ENCHANTMENT.compose().newHandler(event -> {
@@ -90,10 +105,12 @@ public class MasworldPluginBootstrap implements PluginBootstrap {
             registrar.addToTag(EnchantmentTagKeys.NON_TREASURE, Set.of(MULTIMINE_KEY));
             registrar.addToTag(EnchantmentTagKeys.NON_TREASURE, Set.of(MULTIXP_KEY));
             registrar.addToTag(EnchantmentTagKeys.NON_TREASURE, Set.of(ITEMMAGNET_KEY));
+            registrar.addToTag(EnchantmentTagKeys.NON_TREASURE, Set.of(SHOCKER_KEY));
 
             registrar.addToTag(EnchantmentTagKeys.DOUBLE_TRADE_PRICE,Set.of(MULTIXP_KEY));
             registrar.addToTag(EnchantmentTagKeys.DOUBLE_TRADE_PRICE,Set.of(ITEMMAGNET_KEY));
             registrar.addToTag(EnchantmentTagKeys.DOUBLE_TRADE_PRICE,Set.of(MULTIMINE_KEY));
+            registrar.addToTag(EnchantmentTagKeys.DOUBLE_TRADE_PRICE,Set.of(SHOCKER_KEY));
         });
     }
 }

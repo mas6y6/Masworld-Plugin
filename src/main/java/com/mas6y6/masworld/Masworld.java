@@ -1,4 +1,5 @@
 package com.mas6y6.masworld;
+import com.mas6y6.masworld.Commands.XPBottler;
 import com.mas6y6.masworld.Economy.MasEconomy;
 import com.mas6y6.masworld.ItemEffects.ItemEffects;
 import com.mas6y6.masworld.Objects.TextSymbols;
@@ -26,6 +27,8 @@ public final class Masworld extends JavaPlugin {
     public MasEconomy maseconomy;
     public Weapons weapons;
     public Chat chat;
+
+    public XPBottler xpBottler;
 
     @Override
     public void onEnable() {
@@ -64,6 +67,8 @@ public final class Masworld extends JavaPlugin {
         this.weapons = new Weapons(this);
         this.chat = new Chat(this);
 
+        this.xpBottler = new XPBottler(this);
+
         this.getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, commands -> {
             LiteralArgumentBuilder<CommandSourceStack> root = Commands.literal("masworld");
 
@@ -76,6 +81,7 @@ public final class Masworld extends JavaPlugin {
             commands.registrar().register(root.build());
 
             commands.registrar().register(weapons.buildAdminStickCMD().build());
+            commands.registrar().register(this.xpBottler.cmd.build());
         });
 
         getLogger().info("Registered Commands");
