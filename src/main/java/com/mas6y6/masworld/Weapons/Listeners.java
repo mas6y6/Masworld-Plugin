@@ -1,5 +1,6 @@
 package com.mas6y6.masworld.Weapons;
 
+import com.mas6y6.masworld.Masworld;
 import com.mas6y6.masworld.Objects.Utils;
 import io.papermc.paper.registry.RegistryAccess;
 import net.kyori.adventure.text.Component;
@@ -7,6 +8,7 @@ import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.title.TitlePart;
 import org.bukkit.*;
 import org.bukkit.block.Block;
+import org.bukkit.block.BlockFace;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
@@ -24,6 +26,7 @@ import io.papermc.paper.registry.RegistryKey;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
+import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Vector;
 import org.jetbrains.annotations.NotNull;
 
@@ -504,6 +507,10 @@ public class Listeners implements Listener {
         PersistentDataContainer container = meta.getPersistentDataContainer();
 
         // Default cooldown = 30s
+
+        if (!container.has(special_effectKey, PersistentDataType.STRING)) return;
+        if (!Objects.equals(container.get(special_effectKey, PersistentDataType.STRING), "evoker_book")) return;
+
         long itemCooldown = container.getOrDefault(evoker_book_cooldown, PersistentDataType.LONG, 30000L);
 
         long now = System.currentTimeMillis();
@@ -517,46 +524,73 @@ public class Listeners implements Listener {
             return;
         }
 
-        if (!container.has(special_effectKey, PersistentDataType.STRING)) return;
-        if (!Objects.equals(container.get(special_effectKey, PersistentDataType.STRING), "evoker_book")) return;
+        Player player = event.getPlayer();
 
-        World world = event.getPlayer().getWorld();
-
-        Vector direction = event.getPlayer().getEyeLocation().getDirection().clone();
-        direction.setY(0);
-        direction.normalize();
-
+        int beamCount = 10;
         double spacing = container.getOrDefault(evoker_book_spacing, PersistentDataType.DOUBLE, 1.0);
-        int count = container.getOrDefault(evoker_book_range, PersistentDataType.INTEGER, 8);
+        int beamLength = container.getOrDefault(evoker_book_range, PersistentDataType.INTEGER, beamCount);
+        double totalAngle = 180.0;
+        double fangGap = 3.0;
 
-        Location baseLoc = event.getPlayer().getLocation().clone().add(direction.clone().multiply(3));
+        Vector direction = player.getEyeLocation().getDirection().clone();
+        direction.setY(0).normalize();
 
-        Vector[] beams = new Vector[]{
-                direction,
-                rotateVector(direction.clone(), -45.0),
-                rotateVector(direction.clone(), 45.0)
+        Location baseLoc = player.getLocation().clone().add(direction.clone());
+
+        int batchSize = 1;
+        long delay = 3L;
+        UUID playerId = player.getUniqueId();
+        Masworld plugin = this.weapons.main;
+
+        Runnable spawnFangsRunnable = () -> {
+            new BukkitRunnable() {
+                int spawned = 0;
+
+                @Override
+                public void run() {
+                    if (spawned >= beamCount) {
+                        this.cancel();
+                        return;
+                    }
+
+                    Player p = Bukkit.getPlayer(playerId);
+                    if (p == null || !p.isOnline()) {
+                        this.cancel();
+                        return;
+                    }
+
+                    World w = p.getWorld();
+
+                    for (int j = 0; j < batchSize && spawned < beamCount; j++) {
+                        double angle = -totalAngle / 2 + (totalAngle / (beamCount - 1)) * spawned;
+                        Vector fangDir = direction.clone().rotateAroundY(Math.toRadians(angle));
+
+                        for (int i = 1; i <= beamLength; i++) {
+                            Location fangLoc = baseLoc.clone().add(fangDir.clone().multiply(fangGap + (i - 1) * spacing));
+
+                            Block block = w.getBlockAt(fangLoc);
+                            while (block.getY() > w.getMinHeight() && block.isPassable()) {
+                                block = block.getRelative(BlockFace.DOWN);
+                            }
+                            fangLoc.setY(block.getY() + 1);
+
+                            float yaw = (float) Math.toDegrees(Math.atan2(fangDir.getZ(), fangDir.getX())) - 90;
+                            fangLoc.setYaw(yaw);
+
+                            EvokerFangs fangs = (EvokerFangs) w.spawnEntity(fangLoc, EntityType.EVOKER_FANGS);
+                            fangs.setOwner(p);
+                        }
+
+                        spawned++;
+                    }
+                }
+            }.runTaskTimer(plugin, 0L, delay);
         };
 
+        spawnFangsRunnable.run();
+        Bukkit.getScheduler().runTaskLater(plugin, spawnFangsRunnable, 30L);
 
-        for (Vector beamDir : beams) {
-            for (int i = 1; i <= count; i++) {
-                Location fangLoc = baseLoc.clone().add(beamDir.clone().multiply(i * spacing));
-                fangLoc.setY(world.getHighestBlockYAt(fangLoc) + 1);
-
-                EvokerFangs fangs = (EvokerFangs) world.spawnEntity(fangLoc, EntityType.EVOKER_FANGS);
-                fangs.setOwner(event.getPlayer());
-            }
-        }
 
         evokercooldowns.put(uuid, now);
-    }
-
-    private Vector rotateVector(Vector v, double degrees) {
-        double radians = Math.toRadians(degrees);
-        double cos = Math.cos(radians);
-        double sin = Math.sin(radians);
-        double x = v.getX() * cos - v.getZ() * sin;
-        double z = v.getX() * sin + v.getZ() * cos;
-        return new Vector(x, v.getY(), z).normalize();
     }
 }
