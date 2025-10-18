@@ -96,7 +96,7 @@ public class XPBottler {
         player.getInventory().addItem(xpBottle);
 
         player.sendMessage(TextSymbols.SUCCESS.append(
-                Component.text("Bottled " + amount + " XP!")
+                Component.text("Bottled " + amount + " XP Bottle!")
                         .color(NamedTextColor.GREEN)));
 
         return 1;

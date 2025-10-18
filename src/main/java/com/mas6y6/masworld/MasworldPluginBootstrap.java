@@ -46,7 +46,7 @@ public class MasworldPluginBootstrap implements PluginBootstrap {
                                     .maxLevel(3)
                                     .weight(1)
                                     .minimumCost(EnchantmentRegistryEntry.EnchantmentCost.of(25, 1))
-                                    .maximumCost(EnchantmentRegistryEntry.EnchantmentCost.of(70, 1))
+                                    .maximumCost(EnchantmentRegistryEntry.EnchantmentCost.of(30, 1))
                                     .activeSlots(EquipmentSlotGroup.MAINHAND)
                     );
                 })
@@ -72,7 +72,7 @@ public class MasworldPluginBootstrap implements PluginBootstrap {
                             MULTIXP_KEY,
                             b -> b.description(Utils.createEnchantmentComponent("\uefe6", TextColor.color(0x47A036),"MultiXP"))
                                     .supportedItems(event.getOrCreateTag(ItemTypeTagKeys.ENCHANTABLE_MINING))
-                                    .anvilCost(30)
+                                    .anvilCost(10)
                                     .maxLevel(3)
                                     .weight(1)
                                     .minimumCost(EnchantmentRegistryEntry.EnchantmentCost.of(25, 20))
@@ -88,7 +88,7 @@ public class MasworldPluginBootstrap implements PluginBootstrap {
                             ITEMMAGNET_KEY,
                             b -> b.description(Utils.createEnchantmentComponent("\uefe4", TextColor.color(0x2CBAA8),"Magnet"))
                                     .supportedItems(event.getOrCreateTag(ItemTypeTagKeys.FOOT_ARMOR))
-                                    .anvilCost(30)
+                                    .anvilCost(10)
                                     .maxLevel(3)
                                     .weight(1)
                                     .minimumCost(EnchantmentRegistryEntry.EnchantmentCost.of(25, 20))

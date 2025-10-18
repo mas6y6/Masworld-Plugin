@@ -372,4 +372,37 @@ public class WeaponListeners implements Listener {
 
         evokercooldowns.put(uuid, now);
     }
+
+    @EventHandler
+    public void redDragon(EntityShootBowEvent event) {
+        NamespacedKey special_effectKey = new NamespacedKey(this.weapons.main, "special_effect");
+
+        ItemStack item = event.getBow();
+        if (item == null) return;
+
+        ItemMeta meta = item.getItemMeta();
+        if (meta == null) return;
+
+        PersistentDataContainer container = meta.getPersistentDataContainer();
+
+        if (!container.has(special_effectKey, PersistentDataType.STRING)) return;
+        if (!Objects.equals(container.get(special_effectKey, PersistentDataType.STRING), "thereddragon")) return;
+
+        if (!(event.getEntity() instanceof Player player)) return;
+
+        event.setCancelled(true);
+
+        for (int i = 0; i < 3; i++) {
+            int delay = i * 5;
+
+            Bukkit.getScheduler().runTaskLater(this.weapons.main, () -> {
+                Fireball fireball = player.launchProjectile(Fireball.class);
+                fireball.setVelocity(player.getLocation().getDirection().multiply(1.5));
+                fireball.setIsIncendiary(false);
+                fireball.setYield(1.5f);
+
+                player.getWorld().playSound(player.getLocation(), Sound.ENTITY_GHAST_SHOOT, 1f, 1f);
+            }, delay);
+        }
+    }
 }

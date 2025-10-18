@@ -93,6 +93,8 @@ public final class Masworld extends JavaPlugin {
                 }
             }
         }, 0L,20L);
+
+        getServer().getPluginManager().registerEvents(new EventsListener(this), this);
     }
 
     @Override
