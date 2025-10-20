@@ -31,15 +31,15 @@ public class WeaponListeners implements Listener {
     }
 
     public static long getLongPDC(PersistentDataContainer container, NamespacedKey key) {
-        // Try to get as LONG first
-        Long fuseLong = container.get(key, PersistentDataType.LONG);
-        if (fuseLong != null) return fuseLong;
+        try {
+            Long fuseLong = container.get(key, PersistentDataType.LONG);
+            if (fuseLong != null) return fuseLong;
+        } catch (IllegalArgumentException ignored) {}
 
-        // If it's null, maybe it was stored as INT
-        Integer fuseInt = container.get(key, PersistentDataType.INTEGER);
-        if (fuseInt != null) return fuseInt.longValue();
-
-        // Default value if nothing is stored
+        try {
+            Integer fuseInt = container.get(key, PersistentDataType.INTEGER);
+            if (fuseInt != null) return fuseInt.longValue();
+        } catch (IllegalArgumentException ignored) {}
         return 0L;
     }
 
