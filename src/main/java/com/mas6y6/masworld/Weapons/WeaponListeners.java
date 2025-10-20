@@ -43,6 +43,20 @@ public class WeaponListeners implements Listener {
         return 0L;
     }
 
+    public static float getFloatPDC(PersistentDataContainer container, NamespacedKey key) {
+        try {
+            Double valueDouble = container.get(key, PersistentDataType.DOUBLE);
+            if (valueDouble != null) return valueDouble.floatValue();
+        } catch (IllegalArgumentException ignored) {}
+
+        try {
+            Float valueFloat = container.get(key, PersistentDataType.FLOAT);
+            if (valueFloat != null) return valueFloat;
+        } catch (IllegalArgumentException ignored) {}
+
+        return 0f;
+    }
+
     @EventHandler
     public void dynamiteThrow(ProjectileLaunchEvent event) {
         Projectile projectile = event.getEntity();
@@ -59,10 +73,10 @@ public class WeaponListeners implements Listener {
                 NamespacedKey fusekey = new NamespacedKey(this.weapons.main, "dynamite_fuse");
 
                 if (container.has(specialEffectId, PersistentDataType.STRING)) {
-                    if (container.get(specialEffectId, PersistentDataType.STRING).equals("dynamite")) {
+                    if (Objects.equals(container.get(specialEffectId, PersistentDataType.STRING), "dynamite")) {
                         String effect = Objects.requireNonNull(container.get(specialEffectId, PersistentDataType.STRING));
                         Long fuse = getLongPDC(container,fusekey);
-                        Float power = Objects.requireNonNull(container.get(powerkey, PersistentDataType.FLOAT));
+                        Float power = getFloatPDC(container,powerkey);
 
                         projectile.getPersistentDataContainer()
                                 .set(specialEffectId, PersistentDataType.STRING, effect);
