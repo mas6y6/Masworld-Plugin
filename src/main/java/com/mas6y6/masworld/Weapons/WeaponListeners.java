@@ -30,6 +30,19 @@ public class WeaponListeners implements Listener {
         this.weapons = weapons;
     }
 
+    public static long getLongPDC(PersistentDataContainer container, NamespacedKey key) {
+        // Try to get as LONG first
+        Long fuseLong = container.get(key, PersistentDataType.LONG);
+        if (fuseLong != null) return fuseLong;
+
+        // If it's null, maybe it was stored as INT
+        Integer fuseInt = container.get(key, PersistentDataType.INTEGER);
+        if (fuseInt != null) return fuseInt.longValue();
+
+        // Default value if nothing is stored
+        return 0L;
+    }
+
     @EventHandler
     public void dynamiteThrow(ProjectileLaunchEvent event) {
         Projectile projectile = event.getEntity();
@@ -48,19 +61,17 @@ public class WeaponListeners implements Listener {
                 if (container.has(specialEffectId, PersistentDataType.STRING)) {
                     if (container.get(specialEffectId, PersistentDataType.STRING).equals("dynamite")) {
                         String effect = Objects.requireNonNull(container.get(specialEffectId, PersistentDataType.STRING));
-                        Long fuse = Objects.requireNonNull(container.get(fusekey, PersistentDataType.LONG));
+                        Long fuse = getLongPDC(container,fusekey);
                         Float power = Objects.requireNonNull(container.get(powerkey, PersistentDataType.FLOAT));
 
-                        if (effect != null) {
-                            projectile.getPersistentDataContainer()
-                                    .set(specialEffectId, PersistentDataType.STRING, effect);
+                        projectile.getPersistentDataContainer()
+                                .set(specialEffectId, PersistentDataType.STRING, effect);
 
-                            projectile.getPersistentDataContainer()
-                                    .set(powerkey, PersistentDataType.FLOAT, power);
+                        projectile.getPersistentDataContainer()
+                                .set(powerkey, PersistentDataType.FLOAT, power);
 
-                            projectile.getPersistentDataContainer()
-                                    .set(fusekey, PersistentDataType.LONG, fuse);
-                        }
+                        projectile.getPersistentDataContainer()
+                                .set(fusekey, PersistentDataType.LONG, fuse);
                     }
                 }
             }

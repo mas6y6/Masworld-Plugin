@@ -7,6 +7,7 @@ import com.mas6y6.masworld.Weapons.Attributes.DynamitePower;
 import com.mas6y6.masworld.Weapons.Attributes.SpecialEffect;
 import com.mas6y6.masworld.Weapons.Attributes.WeaponDamage;
 import com.mas6y6.masworld.Weapons.Attributes.*;
+import com.mas6y6.masworld.Weapons.Systems.PumpkinBlindness;
 import com.mojang.brigadier.arguments.*;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
@@ -38,6 +39,8 @@ public class Weapons {
     public EvokerBookRange evokerBookRange;
     public EvokerBookAngle evokerBookAngle;
     public EvokerBookBeamCount evokerBookBeamCount;
+
+    public PumpkinBlindness pumpkinBlindness;
     
     public Weapons(Masworld main) {
         this.main = main;
@@ -61,6 +64,8 @@ public class Weapons {
         this.evokerBookRange = new EvokerBookRange(this.main);
         this.evokerBookAngle = new EvokerBookAngle(this.main);
         this.evokerBookBeamCount = new EvokerBookBeamCount(this.main);
+
+        this.pumpkinBlindness = new PumpkinBlindness(this);
     }
 
     public LiteralArgumentBuilder<CommandSourceStack> buildCommands() {
