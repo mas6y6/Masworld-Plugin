@@ -10,6 +10,9 @@ import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.FurnaceRecipe;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.Recipe;
 import org.bukkit.potion.PotionEffectType;
 import org.jetbrains.annotations.NotNull;
 
@@ -191,5 +194,14 @@ public class Utils {
     public static boolean isDay(World world) {
         long time = world.getTime();
         return time >= 0 && time < 12300;
+    }
+
+    public static Material getCookedMaterial(Material raw) {
+        for (Recipe recipe : Bukkit.getRecipesFor(new ItemStack(raw))) {
+            if (recipe instanceof FurnaceRecipe furnace) {
+                return furnace.getResult().getType();
+            }
+        }
+        return null;
     }
 }

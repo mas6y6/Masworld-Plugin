@@ -1,7 +1,6 @@
 package com.mas6y6.masworld.Weapons;
 
 import com.mas6y6.masworld.Objects.Utils;
-import io.papermc.paper.event.entity.EntityDamageItemEvent;
 import io.papermc.paper.registry.RegistryAccess;
 import io.papermc.paper.registry.RegistryKey;
 import org.bukkit.*;
@@ -16,13 +15,10 @@ import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.inventory.EntityEquipment;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.inventory.meta.ItemMeta;
 
 import java.util.*;
 import java.util.stream.Collectors;
-
-import static org.bukkit.Bukkit.getOnlinePlayers;
 
 public class EnchantmentListeners implements Listener {
     public Weapons weapons;
@@ -320,6 +316,36 @@ public class EnchantmentListeners implements Listener {
                     }
                 }
             }
+        }
+    }
+
+    @EventHandler
+    public void smelterOnBlockBreak(BlockBreakEvent event) {
+        NamespacedKey key = new NamespacedKey("masworld", "smelter");
+        Enchantment smelterEnchantment = RegistryAccess.registryAccess()
+                .getRegistry(RegistryKey.ENCHANTMENT)
+                .getOrThrow(key);
+
+        ItemStack item = event.getPlayer().getEquipment().getItemInMainHand();
+
+        if (item.containsEnchantment(smelterEnchantment)) {
+            List<Item> itemsEntities = event.getPlayer().getNearbyEntities(5,5,5)
+                    .stream()
+                    .filter(entity -> entity instanceof Item)
+                    .map(entity -> (Item) entity)
+                    .toList();
+
+            itemsEntities.forEach(itemEntity -> {
+                if (Objects.nonNull(Utils.getCookedMaterial(itemEntity.getItemStack().getType()))) {
+                    ItemStack cooked = new ItemStack(Objects.requireNonNull(Utils.getCookedMaterial(itemEntity.getItemStack().getType())), itemEntity.getItemStack().getAmount());
+
+                    itemEntity.setItemStack(cooked);
+
+                    event.getPlayer().playSound(event.getPlayer().getLocation(), Sound.BLOCK_LAVA_EXTINGUISH, 1.0f, 1.0f);
+
+                    itemEntity.getWorld().spawnParticle(Particle.FLAME,itemEntity.getLocation(),5);
+                }
+            });
         }
     }
 }

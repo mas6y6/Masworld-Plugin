@@ -36,6 +36,10 @@ public class MasworldPluginBootstrap implements PluginBootstrap {
         final var ITEMMAGNET_KEY = EnchantmentKeys.create(Key.key("masworld:itemmagnet"));
         final var SHOCKER_KEY = EnchantmentKeys.create(Key.key("masworld:shocker"));
         final var PHOTOSYNTHESIS_KEY = EnchantmentKeys.create(Key.key("masworld:photosynthesis"));
+        final var LAVA_INVINCIBILITY_KEY = EnchantmentKeys.create(Key.key("masworld:lava_invincibility"));
+        final var CACTUS_INVINCIBILITY_KEY = EnchantmentKeys.create(Key.key("masworld:cactus_invincibility"));
+        final var LENGTH_KEY = EnchantmentKeys.create(Key.key("masworld:length"));
+        final var SMELTER_KEY = EnchantmentKeys.create(Key.key("masworld:smelter"));
 
         manager.registerEventHandler(
                 RegistryEvents.ENCHANTMENT.compose().newHandler(event -> {
@@ -105,21 +109,64 @@ public class MasworldPluginBootstrap implements PluginBootstrap {
                         PHOTOSYNTHESIS_KEY,
                         builder -> builder
                                 .description(Utils.createEnchantmentComponent("\ueef2", TextColor.color(0x76ff57), "Photosynthesis"))
-                                .supportedItems(event.getOrCreateTag(ItemTypeTagKeys.PICKAXES))
-                                .supportedItems(event.getOrCreateTag(ItemTypeTagKeys.AXES))
-                                .supportedItems(event.getOrCreateTag(ItemTypeTagKeys.SHOVELS))
-                                .supportedItems(event.getOrCreateTag(ItemTypeTagKeys.HOES))
-                                .supportedItems(event.getOrCreateTag(ItemTypeTagKeys.ENCHANTABLE_WEAPON))
-                                .supportedItems(event.getOrCreateTag(ItemTypeTagKeys.LEG_ARMOR))
-                                .supportedItems(event.getOrCreateTag(ItemTypeTagKeys.CHEST_ARMOR))
-                                .supportedItems(event.getOrCreateTag(ItemTypeTagKeys.HEAD_ARMOR))
-                                .supportedItems(event.getOrCreateTag(ItemTypeTagKeys.FOOT_ARMOR))
+                                .supportedItems(event.getOrCreateTag(ItemTypeTagKeys.ENCHANTABLE_DURABILITY))
                                 .anvilCost(10)
                                 .maxLevel(1)
                                 .minimumCost(EnchantmentRegistryEntry.EnchantmentCost.of(15, 20))
                                 .maximumCost(EnchantmentRegistryEntry.EnchantmentCost.of(30, 20))
                                 .weight(1)
                                 .activeSlots(EquipmentSlotGroup.ANY)
+                );
+            })
+        );
+
+        manager.registerEventHandler(
+            RegistryEvents.ENCHANTMENT.compose().newHandler(event -> {
+                event.registry().register(
+                        LAVA_INVINCIBILITY_KEY,
+                            builder -> builder
+                                    .description(Utils.createEnchantmentComponent("\ueef2", TextColor.color(0xfc6203),"Lava invincibility"))
+                                    .supportedItems(event.getOrCreateTag(ItemTypeTagKeys.ENCHANTABLE_DURABILITY))
+                                    .anvilCost(15)
+                                    .maxLevel(1)
+                                    .minimumCost(EnchantmentRegistryEntry.EnchantmentCost.of(15, 20))
+                                    .maximumCost(EnchantmentRegistryEntry.EnchantmentCost.of(30, 20))
+                                    .weight(1)
+                                    .activeSlots(EquipmentSlotGroup.ANY)
+                );
+            })
+        );
+
+        manager.registerEventHandler(
+            RegistryEvents.ENCHANTMENT.compose().newHandler(event -> {
+                event.registry().register(
+                        CACTUS_INVINCIBILITY_KEY,
+                        builder -> builder
+                                .description(Utils.createEnchantmentComponent("\ueef2", TextColor.color(0x0ffc03),"Cactus invincibility"))
+                                .supportedItems(event.getOrCreateTag(ItemTypeTagKeys.ENCHANTABLE_DURABILITY))
+                                .anvilCost(15)
+                                .maxLevel(1)
+                                .minimumCost(EnchantmentRegistryEntry.EnchantmentCost.of(15, 20))
+                                .maximumCost(EnchantmentRegistryEntry.EnchantmentCost.of(30, 20))
+                                .weight(1)
+                                .activeSlots(EquipmentSlotGroup.ANY)
+                );
+            })
+        );
+
+        manager.registerEventHandler(
+            RegistryEvents.ENCHANTMENT.compose().newHandler(event -> {
+                event.registry().register(
+                        SMELTER_KEY,
+                        builder -> builder
+                                .description(Utils.createEnchantmentComponent("\uefe6", TextColor.color(0xfcad03),"Smelter"))
+                                .supportedItems(event.getOrCreateTag(ItemTypeTagKeys.ENCHANTABLE_MINING))
+                                .anvilCost(20)
+                                .maxLevel(1)
+                                .minimumCost(EnchantmentRegistryEntry.EnchantmentCost.of(15, 20))
+                                .maximumCost(EnchantmentRegistryEntry.EnchantmentCost.of(30, 20))
+                                .weight(1)
+                                .activeSlots(EquipmentSlotGroup.MAINHAND)
                 );
             })
         );
