@@ -187,4 +187,9 @@ public class Utils {
         int expThisLevel = Math.round(progress * expToNext);
         return getExpAtLevel(level) + expThisLevel;
     }
+
+    public static boolean isDay(World world) {
+        long time = world.getTime();
+        return time >= 0 && time < 12300;
+    }
 }

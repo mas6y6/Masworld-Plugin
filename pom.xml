@@ -4,7 +4,7 @@
     <groupId>com.mas6y6</groupId>
     <artifactId>masworld</artifactId>
     <name>masworld</name>
-    <version>1.17.4-BETA</version>
+    <version>1.17.8-BETA</version>
     <build>
         <defaultGoal>clean package</defaultGoal>
         <resources>
@@ -52,6 +52,10 @@
         <repository>
             <id>momirealms-repo</id>
             <url>https://repo.momirealms.net/releases/</url>
+        </repository>
+        <repository>
+            <id>xenondevs</id>
+            <url>https://repo.xenondevs.xyz/releases</url>
         </repository>
     </repositories>
     <dependencies>
@@ -104,6 +108,11 @@
             <artifactId>craft-engine-bukkit</artifactId>
             <version>0.0.64</version> <!-- for instance 0.0.60 -->
             <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>xyz.xenondevs.invui</groupId>
+            <artifactId>invui-kotlin</artifactId>
+            <version>1.47</version>
         </dependency>
     </dependencies>
     <properties>

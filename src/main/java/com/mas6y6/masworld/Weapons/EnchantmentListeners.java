@@ -1,23 +1,28 @@
 package com.mas6y6.masworld.Weapons;
 
 import com.mas6y6.masworld.Objects.Utils;
+import io.papermc.paper.event.entity.EntityDamageItemEvent;
 import io.papermc.paper.registry.RegistryAccess;
 import io.papermc.paper.registry.RegistryKey;
 import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.enchantments.Enchantment;
-import org.bukkit.entity.Entity;
-import org.bukkit.entity.ExperienceOrb;
-import org.bukkit.entity.Item;
-import org.bukkit.entity.Player;
+import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
+import org.bukkit.inventory.EntityEquipment;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.PlayerInventory;
+import org.bukkit.inventory.meta.ItemMeta;
 
 import java.util.*;
+import java.util.stream.Collectors;
+
+import static org.bukkit.Bukkit.getOnlinePlayers;
 
 public class EnchantmentListeners implements Listener {
     public Weapons weapons;
@@ -37,6 +42,8 @@ public class EnchantmentListeners implements Listener {
                 ItemMagnet(player);
             }
         }, 0L,20L);
+
+        Bukkit.getScheduler().runTaskTimer(this.weapons.main,this::photosynthisEnchantmentTick, 0L, 20L);
     }
 
     @EventHandler
@@ -205,7 +212,6 @@ public class EnchantmentListeners implements Listener {
         int level = boots.getEnchantmentLevel(itemMagnet);
         double radius = 2.0 + (level * 2.0);
 
-        int pulled = 0;
 
         spawnMagnetParticles(player, radius);
 
@@ -237,6 +243,83 @@ public class EnchantmentListeners implements Listener {
             Particle.DustOptions dustOptions = new Particle.DustOptions(color, scale);
 
             player.getWorld().spawnParticle(Particle.DUST, particleLoc, 1, 0, 0, 0, 0, dustOptions);
+        }
+    }
+
+    @EventHandler
+    private void shockerEnchantment(EntityDamageByEntityEvent event) {
+        if (!(event.getDamager() instanceof LivingEntity attacker)) return;
+
+        ItemStack weapon = attacker.getEquipment().getItemInMainHand();
+        Entity victim = event.getEntity();
+
+        NamespacedKey key = new NamespacedKey("masworld", "shocker");
+        Enchantment shockerEnchantment = RegistryAccess.registryAccess()
+                .getRegistry(RegistryKey.ENCHANTMENT)
+                .get(key);
+
+        assert shockerEnchantment != null;
+        if (weapon.containsEnchantment(shockerEnchantment)) {
+            World world = victim.getLocation().getWorld();
+
+            if (world.hasStorm() && world.isThundering()) {
+                world.playSound(victim.getLocation(),Sound.ITEM_TRIDENT_THUNDER, 1.0f, 1.0f);
+                world.strikeLightningEffect(victim.getLocation());
+            }
+        }
+    }
+
+    public void photosynthisEnchantmentTick() {
+        List<Player> playersInOverworld = Bukkit.getOnlinePlayers().stream()
+                .filter(p -> p.getWorld().getName().equals("world"))
+                .collect(Collectors.toList());
+
+        playersInOverworld.forEach(this::photosynthesisEnchantmentHandler);
+    }
+
+    public void photosynthesisEnchantmentHandler(Player player) {
+        EntityEquipment inventory = player.getEquipment();
+
+        NamespacedKey key = new NamespacedKey("masworld", "photosynthesis");
+        Enchantment photosynthesisEnchantment = RegistryAccess.registryAccess()
+                .getRegistry(RegistryKey.ENCHANTMENT)
+                .getOrThrow(key);
+
+        List<ItemStack> items = List.of(
+                inventory.getItemInMainHand(),
+                inventory.getItemInOffHand(),
+                inventory.getHelmet(),
+                inventory.getChestplate(),
+                inventory.getLeggings(),
+                inventory.getBoots()
+        );
+
+        boolean hasPhotosynthesis = items.stream()
+                .filter(Objects::nonNull)
+                .anyMatch(item -> item.containsEnchantment(photosynthesisEnchantment));
+
+        if (hasPhotosynthesis) {
+            player.getWorld().spawnParticle(
+                    Particle.HAPPY_VILLAGER,
+                    player.getLocation().getX(),
+                    player.getLocation().getY(),
+                    player.getLocation().getZ(),
+                    10,
+                    0.2, 0.5, 0.2,
+                    10,
+                    null,
+                    true
+            );
+
+            for (ItemStack item : items) {
+                if (item != null && item.containsEnchantment(photosynthesisEnchantment)) {
+                    ItemMeta meta = item.getItemMeta();
+                    if (meta instanceof Damageable damageable) {
+                        damageable.heal(1);
+                        item.setItemMeta((ItemMeta) damageable);
+                    }
+                }
+            }
         }
     }
 }
