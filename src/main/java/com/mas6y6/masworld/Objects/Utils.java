@@ -196,12 +196,12 @@ public class Utils {
         return time >= 0 && time < 12300;
     }
 
-    public static Material getCookedMaterial(Material raw) {
-        for (Recipe recipe : Bukkit.getRecipesFor(new ItemStack(raw))) {
-            if (recipe instanceof FurnaceRecipe furnace) {
-                return furnace.getResult().getType();
-            }
-        }
-        return null;
+    public static Material getCookedMaterial(Material m) {
+        return switch(m) {
+            case IRON_ORE, RAW_IRON -> Material.IRON_INGOT;
+            case GOLD_ORE, RAW_GOLD -> Material.GOLD_INGOT;
+            case COPPER_ORE, RAW_COPPER -> Material.COPPER_INGOT;
+            default -> null;
+        };
     }
 }

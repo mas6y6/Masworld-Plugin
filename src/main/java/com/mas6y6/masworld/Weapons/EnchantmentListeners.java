@@ -1,6 +1,5 @@
 package com.mas6y6.masworld.Weapons;
 
-import com.mas6y6.masworld.Objects.MasworldTagsSets;
 import com.mas6y6.masworld.Objects.Utils;
 import io.papermc.paper.registry.RegistryAccess;
 import io.papermc.paper.registry.RegistryKey;
@@ -11,15 +10,18 @@ import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.block.BlockDropItemEvent;
+import org.bukkit.event.entity.EntityCombustEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.inventory.EntityEquipment;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.Damageable;
 import org.bukkit.inventory.meta.ItemMeta;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 public class EnchantmentListeners implements Listener {
     public Weapons weapons;
@@ -40,7 +42,7 @@ public class EnchantmentListeners implements Listener {
             }
         }, 0L,20L);
 
-        Bukkit.getScheduler().runTaskTimer(this.weapons.main,this::photosynthisEnchantmentTick, 0L, 20L);
+        Bukkit.getScheduler().runTaskTimer(this.weapons.main,this::photosynthisEnchantmentTick, 0L, 80L);
     }
 
     @EventHandler
@@ -270,8 +272,13 @@ public class EnchantmentListeners implements Listener {
         Bukkit.getOnlinePlayers().stream()
             .filter(p -> p.getWorld().getName().equals("world"))
             .filter(p -> p.getWorld().isDayTime())
-            .filter(p -> p.getLocation().getBlock().getLightFromSky() > 0)
-            .forEach(this::photosynthesisEnchantmentHandler);
+                .filter(p -> {
+                    Block block = p.getLocation().getBlock();
+                    int highestY = p.getWorld().getHighestBlockYAt(block.getX(), block.getZ());
+                    return block.getY() >= highestY;
+                })
+
+                .forEach(this::photosynthesisEnchantmentHandler);
     }
 
     public void photosynthesisEnchantmentHandler(Player player) {
@@ -296,57 +303,104 @@ public class EnchantmentListeners implements Listener {
                 .anyMatch(item -> item.containsEnchantment(photosynthesisEnchantment));
 
         if (hasPhotosynthesis) {
-            player.getWorld().spawnParticle(
-                    Particle.HAPPY_VILLAGER,
-                    player.getLocation().getX(),
-                    player.getLocation().getY(),
-                    player.getLocation().getZ(),
-                    10,
-                    0.2, 0.5, 0.2,
-                    10,
-                    null,
-                    true
-            );
-
             for (ItemStack item : items) {
                 if (item != null && item.containsEnchantment(photosynthesisEnchantment)) {
                     ItemMeta meta = item.getItemMeta();
                     if (meta instanceof Damageable damageable) {
-                        damageable.heal(1);
-                        item.setItemMeta((ItemMeta) damageable);
+                        int currentDamage = damageable.getDamage();
+                        if (currentDamage > 0) {
+                            damageable.setDamage(currentDamage - 1);
+                            item.setItemMeta((ItemMeta) damageable);
+
+                            player.getWorld().spawnParticle(
+                                    Particle.HAPPY_VILLAGER,
+                                    player.getLocation().getX(),
+                                    player.getLocation().getY(),
+                                    player.getLocation().getZ(),
+                                    2,
+                                    0.2, 0.5, 0.2,
+                                    0.05, // extra
+                                    null,
+                                    true
+                            );
+                        }
                     }
+
                 }
             }
         }
     }
 
     @EventHandler
-    public void smelterOnBlockBreak(BlockBreakEvent event) {
+    public void smelterOnBlockDrop(BlockDropItemEvent event) {
+        Player player = event.getPlayer();
+        ItemStack itemInHand = player.getEquipment().getItemInMainHand();
+
         NamespacedKey key = new NamespacedKey("masworld", "smelter");
         Enchantment smelterEnchantment = RegistryAccess.registryAccess()
                 .getRegistry(RegistryKey.ENCHANTMENT)
                 .getOrThrow(key);
 
-        ItemStack item = event.getPlayer().getEquipment().getItemInMainHand();
+        if (!itemInHand.containsEnchantment(smelterEnchantment)) return;
 
-        Player player = event.getPlayer();
-        Block block = event.getBlock();
+        event.getItems().forEach(dropped -> {
+            ItemStack original = dropped.getItemStack();
+            Material cookedMaterial = Utils.getCookedMaterial(original.getType());
 
-        if (item.containsEnchantment(smelterEnchantment)) {
-            if (MasworldTagsSets.ORES.contains(block.getType())) {
-                event.getPlayer().getNearbyEntities(5,5,5)
-                    .stream()
-                    .filter(entity -> entity instanceof Item)
-                    .map(entity -> (Item) entity)
-                    .filter(e -> Utils.getCookedMaterial(e.getItemStack().getType()) != null)
-                    .forEach(itemEntity -> {
-                        Material cookedMaterial = Utils.getCookedMaterial(itemEntity.getItemStack().getType());
-                        assert cookedMaterial != null;
-                        ItemStack cooked = new ItemStack(cookedMaterial, itemEntity.getItemStack().getAmount());
-                        itemEntity.setItemStack(cooked);
-                        player.playSound(player.getLocation(), Sound.BLOCK_LAVA_EXTINGUISH, 1f, 1f);
-                        itemEntity.getWorld().spawnParticle(Particle.FLAME, itemEntity.getLocation(), 5);
-                    });
+            if (cookedMaterial != null) {
+                ItemStack cookedStack = new ItemStack(cookedMaterial, original.getAmount());
+                dropped.setItemStack(cookedStack);
+
+                player.playSound(player.getLocation(), Sound.BLOCK_LAVA_EXTINGUISH, 1f, 1f);
+                dropped.getWorld().spawnParticle(Particle.FLAME, dropped.getLocation().getX(), dropped.getLocation().getY(), dropped.getLocation().getZ(), 10, 0, 0, 0, 0.05);
+            }
+        });
+    }
+
+    @EventHandler
+    public void lavaInvincibility(EntityDamageEvent event) {
+        if (!(event.getEntity() instanceof Item item)) return;
+
+        NamespacedKey key = new NamespacedKey("masworld", "lava_invincibility");
+        Enchantment invincibilityEnchantment = RegistryAccess.registryAccess()
+                .getRegistry(RegistryKey.ENCHANTMENT)
+                .getOrThrow(key);
+
+        if (item.getItemStack().containsEnchantment(invincibilityEnchantment)) {
+            if (event.getCause() == EntityDamageEvent.DamageCause.LAVA) {
+                event.setCancelled(true);
+            }
+        }
+    }
+
+    @EventHandler
+    public void cactusInvincibility(EntityDamageEvent event) {
+        if (!(event.getEntity() instanceof Item item)) return;
+
+        NamespacedKey key = new NamespacedKey("masworld", "cactus_invincibility");
+        Enchantment invincibilityEnchantment = RegistryAccess.registryAccess()
+                .getRegistry(RegistryKey.ENCHANTMENT)
+                .getOrThrow(key);
+
+        if (item.getItemStack().containsEnchantment(invincibilityEnchantment)) {
+            if (event.getCause() == EntityDamageEvent.DamageCause.CONTACT) {
+                event.setCancelled(true);
+            }
+        }
+    }
+
+    @EventHandler
+    public void explosionInvincibility(EntityDamageEvent event) {
+        if (!(event.getEntity() instanceof Item item)) return;
+
+        NamespacedKey key = new NamespacedKey("masworld", "explosion_invincibility");
+        Enchantment invincibilityEnchantment = RegistryAccess.registryAccess()
+                .getRegistry(RegistryKey.ENCHANTMENT)
+                .getOrThrow(key);
+
+        if (item.getItemStack().containsEnchantment(invincibilityEnchantment)) {
+            if (event.getCause() == EntityDamageEvent.DamageCause.BLOCK_EXPLOSION || event.getCause() == EntityDamageEvent.DamageCause.ENTITY_EXPLOSION) {
+                event.setCancelled(true);
             }
         }
     }

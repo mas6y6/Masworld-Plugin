@@ -38,23 +38,24 @@ public class MasworldPluginBootstrap implements PluginBootstrap {
         final var PHOTOSYNTHESIS_KEY = EnchantmentKeys.create(Key.key("masworld:photosynthesis"));
         final var LAVA_INVINCIBILITY_KEY = EnchantmentKeys.create(Key.key("masworld:lava_invincibility"));
         final var CACTUS_INVINCIBILITY_KEY = EnchantmentKeys.create(Key.key("masworld:cactus_invincibility"));
+        final var EXPLOSION_INVINCIBILITY_KEY = EnchantmentKeys.create(Key.key("masworld:explosion_invincibility"));
         final var LENGTH_KEY = EnchantmentKeys.create(Key.key("masworld:length"));
         final var SMELTER_KEY = EnchantmentKeys.create(Key.key("masworld:smelter"));
 
         manager.registerEventHandler(
-                RegistryEvents.ENCHANTMENT.compose().newHandler(event -> {
-                    event.registry().register(
-                            MULTIMINE_KEY,
-                            b -> b.description(Utils.createEnchantmentComponent("\uefe6", TextColor.color(0x9A5CC6),"Multimine"))
-                                    .supportedItems(event.getOrCreateTag(ItemTypeTagKeys.ENCHANTABLE_MINING))
-                                    .anvilCost(7)
-                                    .maxLevel(3)
-                                    .weight(1)
-                                    .minimumCost(EnchantmentRegistryEntry.EnchantmentCost.of(25, 1))
-                                    .maximumCost(EnchantmentRegistryEntry.EnchantmentCost.of(30, 1))
-                                    .activeSlots(EquipmentSlotGroup.MAINHAND)
-                    );
-                })
+            RegistryEvents.ENCHANTMENT.compose().newHandler(event -> {
+                event.registry().register(
+                        MULTIMINE_KEY,
+                        b -> b.description(Utils.createEnchantmentComponent("\uefe6", TextColor.color(0x9A5CC6),"Multimine"))
+                                .supportedItems(event.getOrCreateTag(ItemTypeTagKeys.ENCHANTABLE_MINING))
+                                .anvilCost(7)
+                                .maxLevel(3)
+                                .weight(1)
+                                .minimumCost(EnchantmentRegistryEntry.EnchantmentCost.of(25, 1))
+                                .maximumCost(EnchantmentRegistryEntry.EnchantmentCost.of(30, 1))
+                                .activeSlots(EquipmentSlotGroup.MAINHAND)
+                );
+            })
         );
 
         manager.registerEventHandler(RegistryEvents.ENCHANTMENT.compose().newHandler(event -> {
@@ -155,6 +156,23 @@ public class MasworldPluginBootstrap implements PluginBootstrap {
         );
 
         manager.registerEventHandler(
+                RegistryEvents.ENCHANTMENT.compose().newHandler(event -> {
+                    event.registry().register(
+                            EXPLOSION_INVINCIBILITY_KEY,
+                            builder -> builder
+                                    .description(Utils.createEnchantmentComponent("\ueef2", TextColor.color(0xff00b7),"Explosion invincibility"))
+                                    .supportedItems(event.getOrCreateTag(ItemTypeTagKeys.ENCHANTABLE_DURABILITY))
+                                    .anvilCost(15)
+                                    .maxLevel(1)
+                                    .minimumCost(EnchantmentRegistryEntry.EnchantmentCost.of(15, 20))
+                                    .maximumCost(EnchantmentRegistryEntry.EnchantmentCost.of(30, 20))
+                                    .weight(1)
+                                    .activeSlots(EquipmentSlotGroup.ANY)
+                    );
+                })
+        );
+
+        manager.registerEventHandler(
             RegistryEvents.ENCHANTMENT.compose().newHandler(event -> {
                 event.registry().register(
                         SMELTER_KEY,
@@ -163,6 +181,23 @@ public class MasworldPluginBootstrap implements PluginBootstrap {
                                 .supportedItems(event.getOrCreateTag(ItemTypeTagKeys.ENCHANTABLE_MINING))
                                 .anvilCost(20)
                                 .maxLevel(1)
+                                .minimumCost(EnchantmentRegistryEntry.EnchantmentCost.of(15, 20))
+                                .maximumCost(EnchantmentRegistryEntry.EnchantmentCost.of(30, 20))
+                                .weight(1)
+                                .activeSlots(EquipmentSlotGroup.MAINHAND)
+                );
+            })
+        );
+
+        manager.registerEventHandler(
+            RegistryEvents.ENCHANTMENT.compose().newHandler(event -> {
+                event.registry().register(
+                        LENGTH_KEY,
+                        builder -> builder
+                                .description(Utils.createEnchantmentComponent("\uefe6", TextColor.color(0x0073ff),"Length"))
+                                .supportedItems(event.getOrCreateTag(ItemTypeTagKeys.ENCHANTABLE_MINING))
+                                .anvilCost(20)
+                                .maxLevel(2)
                                 .minimumCost(EnchantmentRegistryEntry.EnchantmentCost.of(15, 20))
                                 .maximumCost(EnchantmentRegistryEntry.EnchantmentCost.of(30, 20))
                                 .weight(1)
