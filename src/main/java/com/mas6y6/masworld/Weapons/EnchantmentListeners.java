@@ -1,5 +1,6 @@
 package com.mas6y6.masworld.Weapons;
 
+import com.mas6y6.masworld.Objects.MasworldTagsSets;
 import com.mas6y6.masworld.Objects.Utils;
 import io.papermc.paper.registry.RegistryAccess;
 import io.papermc.paper.registry.RegistryKey;
@@ -266,11 +267,11 @@ public class EnchantmentListeners implements Listener {
     }
 
     public void photosynthisEnchantmentTick() {
-        List<Player> playersInOverworld = Bukkit.getOnlinePlayers().stream()
-                .filter(p -> p.getWorld().getName().equals("world"))
-                .collect(Collectors.toList());
-
-        playersInOverworld.forEach(this::photosynthesisEnchantmentHandler);
+        Bukkit.getOnlinePlayers().stream()
+            .filter(p -> p.getWorld().getName().equals("world"))
+            .filter(p -> p.getWorld().isDayTime())
+            .filter(p -> p.getLocation().getBlock().getLightFromSky() > 0)
+            .forEach(this::photosynthesisEnchantmentHandler);
     }
 
     public void photosynthesisEnchantmentHandler(Player player) {
@@ -282,12 +283,12 @@ public class EnchantmentListeners implements Listener {
                 .getOrThrow(key);
 
         List<ItemStack> items = List.of(
-                inventory.getItemInMainHand(),
-                inventory.getItemInOffHand(),
-                inventory.getHelmet(),
-                inventory.getChestplate(),
-                inventory.getLeggings(),
-                inventory.getBoots()
+            inventory.getItemInMainHand(),
+            inventory.getItemInOffHand(),
+            inventory.getHelmet(),
+            inventory.getChestplate(),
+            inventory.getLeggings(),
+            inventory.getBoots()
         );
 
         boolean hasPhotosynthesis = items.stream()
@@ -328,24 +329,25 @@ public class EnchantmentListeners implements Listener {
 
         ItemStack item = event.getPlayer().getEquipment().getItemInMainHand();
 
+        Player player = event.getPlayer();
+        Block block = event.getBlock();
+
         if (item.containsEnchantment(smelterEnchantment)) {
-            List<Item> itemsEntities = event.getPlayer().getNearbyEntities(5,5,5)
+            if (MasworldTagsSets.ORES.contains(block.getType())) {
+                event.getPlayer().getNearbyEntities(5,5,5)
                     .stream()
                     .filter(entity -> entity instanceof Item)
                     .map(entity -> (Item) entity)
-                    .toList();
-
-            itemsEntities.forEach(itemEntity -> {
-                if (Objects.nonNull(Utils.getCookedMaterial(itemEntity.getItemStack().getType()))) {
-                    ItemStack cooked = new ItemStack(Objects.requireNonNull(Utils.getCookedMaterial(itemEntity.getItemStack().getType())), itemEntity.getItemStack().getAmount());
-
-                    itemEntity.setItemStack(cooked);
-
-                    event.getPlayer().playSound(event.getPlayer().getLocation(), Sound.BLOCK_LAVA_EXTINGUISH, 1.0f, 1.0f);
-
-                    itemEntity.getWorld().spawnParticle(Particle.FLAME,itemEntity.getLocation(),5);
-                }
-            });
+                    .filter(e -> Utils.getCookedMaterial(e.getItemStack().getType()) != null)
+                    .forEach(itemEntity -> {
+                        Material cookedMaterial = Utils.getCookedMaterial(itemEntity.getItemStack().getType());
+                        assert cookedMaterial != null;
+                        ItemStack cooked = new ItemStack(cookedMaterial, itemEntity.getItemStack().getAmount());
+                        itemEntity.setItemStack(cooked);
+                        player.playSound(player.getLocation(), Sound.BLOCK_LAVA_EXTINGUISH, 1f, 1f);
+                        itemEntity.getWorld().spawnParticle(Particle.FLAME, itemEntity.getLocation(), 5);
+                    });
+            }
         }
     }
 }
