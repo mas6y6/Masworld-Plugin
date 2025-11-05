@@ -1,4 +1,5 @@
 package com.mas6y6.masworld;
+import com.mas6y6.masworld.Commands.PersonalVault.PersonalVault;
 import com.mas6y6.masworld.Commands.XPBottler;
 import com.mas6y6.masworld.Economy.MasEconomy;
 import com.mas6y6.masworld.ItemEffects.ItemEffects;
@@ -27,6 +28,7 @@ public final class Masworld extends JavaPlugin {
     public Chat chat;
 
     public XPBottler xpBottler;
+    public PersonalVault personalVault;
 
     @Override
     public void onEnable() {
@@ -66,6 +68,7 @@ public final class Masworld extends JavaPlugin {
         this.chat = new Chat(this);
 
         this.xpBottler = new XPBottler(this);
+        this.personalVault = new PersonalVault(this);
 
         this.getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, commands -> {
             LiteralArgumentBuilder<CommandSourceStack> root = Commands.literal("masworld");
