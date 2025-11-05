@@ -204,4 +204,18 @@ public class Utils {
             default -> null;
         };
     }
+
+    public static Enchantment getEnchantment(NamespacedKey key) {
+        return RegistryAccess.registryAccess()
+                .getRegistry(RegistryKey.ENCHANTMENT)
+                .getOrThrow(key);
+    }
+
+    public static Enchantment getEnchantment(String namespace, String key) {
+        NamespacedKey namespacedKey = new NamespacedKey(namespace,key);
+
+        return RegistryAccess.registryAccess()
+                .getRegistry(RegistryKey.ENCHANTMENT)
+                .getOrThrow(namespacedKey);
+    }
 }

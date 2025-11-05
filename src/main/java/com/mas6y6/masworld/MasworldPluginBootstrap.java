@@ -12,16 +12,20 @@ import io.papermc.paper.registry.event.RegistryEvents;
 import io.papermc.paper.registry.keys.EnchantmentKeys;
 import io.papermc.paper.registry.keys.tags.EnchantmentTagKeys;
 import io.papermc.paper.registry.keys.tags.ItemTypeTagKeys;
+import io.papermc.paper.registry.set.RegistryKeySet;
+import io.papermc.paper.registry.set.RegistrySet;
 import io.papermc.paper.tag.PostFlattenTagRegistrar;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextColor;
+import org.bukkit.NamespacedKey;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.EquipmentSlotGroup;
 import org.jetbrains.annotations.NotNull;
 import com.mas6y6.masworld.Objects.Utils;
 
+import java.util.List;
 import java.util.Set;
 
 @SuppressWarnings("UnstableApiUsage")
@@ -117,6 +121,12 @@ public class MasworldPluginBootstrap implements PluginBootstrap {
                                 .maximumCost(EnchantmentRegistryEntry.EnchantmentCost.of(30, 20))
                                 .weight(1)
                                 .activeSlots(EquipmentSlotGroup.ANY)
+                                .exclusiveWith(
+                                        RegistrySet.keySet(RegistryKey.ENCHANTMENT,List.of(
+                                                EnchantmentKeys.MENDING
+                                            )
+                                        )
+                                )
                 );
             })
         );
@@ -213,6 +223,8 @@ public class MasworldPluginBootstrap implements PluginBootstrap {
             registrar.addToTag(EnchantmentTagKeys.NON_TREASURE, Set.of(MULTIXP_KEY));
             registrar.addToTag(EnchantmentTagKeys.NON_TREASURE, Set.of(ITEMMAGNET_KEY));
             registrar.addToTag(EnchantmentTagKeys.NON_TREASURE, Set.of(SHOCKER_KEY));
+            registrar.addToTag(EnchantmentTagKeys.NON_TREASURE, Set.of(LENGTH_KEY));
+            registrar.addToTag(EnchantmentTagKeys.NON_TREASURE, Set.of(PHOTOSYNTHESIS_KEY));
 
             registrar.addToTag(EnchantmentTagKeys.DOUBLE_TRADE_PRICE,Set.of(MULTIXP_KEY));
             registrar.addToTag(EnchantmentTagKeys.DOUBLE_TRADE_PRICE,Set.of(ITEMMAGNET_KEY));
