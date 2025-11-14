@@ -15,6 +15,7 @@ permissions:
 
   masworld.itemeffects:
     description: Allow the player to use the ItemEffects system
+    default: true
 
   masworld.itemeffects.debug:
     description: Allows the player to use the debug commands
