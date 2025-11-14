@@ -1,10 +1,17 @@
 package com.mas6y6.masworld.Commands.PersonalVault;
 import com.mas6y6.masworld.Masworld;
+import com.mas6y6.masworld.Objects.TextSymbols;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
 import io.papermc.paper.plugin.lifecycle.event.registrar.ReloadableRegistrarEvent;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
+import org.bukkit.entity.Player;
+import org.bukkit.event.inventory.InventoryType;
+import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
@@ -35,6 +42,8 @@ public class PersonalVault {
             this.main.getLogger().severe("Could not create PersonalVault directory!");
             throw new RuntimeException(e);
         }
+
+        this.main.getServer().getPluginManager().registerEvents(new PersonalVaultListener(this), this.main);
     }
 
     public Vault createVault(UUID uuid) {
@@ -44,7 +53,7 @@ public class PersonalVault {
             try {
                 file.createNewFile();
 
-                Vault vault = new Vault(file.getPath());
+                Vault vault = new Vault(file.getPath(), uuid);
                 vaults.put(uuid, vault);
 
                 return vault;
@@ -75,8 +84,40 @@ public class PersonalVault {
         LiteralArgumentBuilder<CommandSourceStack> alias1 = Commands.literal("pv");
         alias1.redirect(base.build());
 
+        LiteralArgumentBuilder<CommandSourceStack> test = Commands.literal("pvtest");
+        test.executes(ctx -> {
+            CommandSourceStack source = ctx.getSource();
+            if (!(source.getSender() instanceof Player player)) {
+                // send error
+                return 0;
+            }
+
+            this.openVault(player);
+            return 1;
+        });
+
         Commands register = event.registrar();
         register.register(base.build());
         register.register(alias1.build());
+        register.register(test.build());
     }
+
+    public Inventory openVault(Player player) {
+        UUID uuid = player.getUniqueId();
+        Vault vault = vaults.get(uuid);
+
+        int size = vault.getMaxSlots(); // read from meta table
+
+        VaultInventoryHolder holder = new VaultInventoryHolder(uuid, vault);
+        Inventory inv = Bukkit.createInventory(holder, size, Component.text("Personal Vault"));
+        holder.setInventory(inv);
+
+        // Load items from SQLite and put into inventory
+        Map<Integer, ItemStack> storedItems = vault.loadItems();
+        storedItems.forEach(inv::setItem);
+
+        player.openInventory(inv);
+        return inv;
+    }
+
 }

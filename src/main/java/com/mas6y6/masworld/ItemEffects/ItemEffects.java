@@ -48,6 +48,8 @@ public class ItemEffects {
 
     public Integer cfgver = 1;
 
+    // there could be such a better way for me to do this but i am lazy as fuck rn
+
     public ItemEffects(Masworld main, File directory) {
         this.main = main;
         this.dir = directory;
