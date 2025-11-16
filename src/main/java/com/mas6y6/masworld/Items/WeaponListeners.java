@@ -1,4 +1,4 @@
-package com.mas6y6.masworld.Weapons;
+package com.mas6y6.masworld.Items;
 
 import com.mas6y6.masworld.Masworld;
 import net.kyori.adventure.text.Component;

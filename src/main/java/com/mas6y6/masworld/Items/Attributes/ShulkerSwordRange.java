@@ -1,4 +1,4 @@
-package com.mas6y6.masworld.Weapons.Attributes;
+package com.mas6y6.masworld.Items.Attributes;
 
 import com.mas6y6.masworld.Masworld;
 import com.mas6y6.masworld.Objects.TextSymbols;
@@ -10,15 +10,15 @@ import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Player;
 import org.bukkit.persistence.PersistentDataType;
 
-public class DynamitePower {
+public class ShulkerSwordRange{
     public Masworld main;
 
-    public DynamitePower(Masworld plugin) {
+    public ShulkerSwordRange(Masworld plugin) {
         this.main = plugin;
     }
 
     public int set(CommandContext<CommandSourceStack> context) {
-        Float value = context.getArgument("value",Float.class);
+        Double value = context.getArgument("value",Double.class);
 
         CommandSourceStack source = context.getSource();
 
@@ -32,13 +32,13 @@ public class DynamitePower {
             }
         }
 
-        NamespacedKey namespace = new NamespacedKey(this.main, "dynamite_power");
+        NamespacedKey namespace = new NamespacedKey(this.main, "shulker_sword_range");
 
         player.getInventory().getItemInMainHand().editMeta(meta -> {
-            meta.getPersistentDataContainer().set(namespace, PersistentDataType.FLOAT, value);
+            meta.getPersistentDataContainer().set(namespace, PersistentDataType.DOUBLE, value);
         });
 
-        player.sendMessage(TextSymbols.SUCCESS.append(Component.text("Successfully change \"masworld:dynamite_power\" = \""+ value +"\".").color(NamedTextColor.GREEN)));
+        player.sendMessage(TextSymbols.SUCCESS.append(Component.text("Successfully change \"masworld:shulker_sword_range\" = \""+ value +"\".").color(NamedTextColor.GREEN)));
 
         return 0;
     }
@@ -57,13 +57,13 @@ public class DynamitePower {
             }
         }
 
-        NamespacedKey namespace = new NamespacedKey(this.main, "dynamite_power");
+        NamespacedKey namespace = new NamespacedKey(this.main, "shulker_sword_range");
 
         player.getInventory().getItemInMainHand().editMeta(meta -> {
             meta.getPersistentDataContainer().remove(namespace);
         });
 
-        player.sendMessage(TextSymbols.SUCCESS.append(Component.text("Successfully removed \"masworld:dynamite_power\" from item.").color(NamedTextColor.GREEN)));
+        player.sendMessage(TextSymbols.SUCCESS.append(Component.text("Successfully removed \"masworld:shulker_sword_range\" from item.").color(NamedTextColor.GREEN)));
 
         return 0;
     }
@@ -81,11 +81,11 @@ public class DynamitePower {
             }
         }
 
-        NamespacedKey namespace = new NamespacedKey(this.main, "dynamite_power");
+        NamespacedKey namespace = new NamespacedKey(this.main, "shulker_sword_range");
 
-        Float value = player.getInventory().getItemInMainHand().getPersistentDataContainer().get(namespace,PersistentDataType.FLOAT);
+        Double value = player.getInventory().getItemInMainHand().getPersistentDataContainer().get(namespace,PersistentDataType.DOUBLE);
 
-        player.sendMessage(TextSymbols.SUCCESS.append(Component.text("\"masworld:dynamite_power\" = \""+ value +"\"").color(NamedTextColor.GREEN)));
+        player.sendMessage(TextSymbols.SUCCESS.append(Component.text("\"masworld:shulker_sword_range\" = \""+ value +"\"").color(NamedTextColor.GREEN)));
 
         return 0;
     }

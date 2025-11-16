@@ -1,4 +1,4 @@
-package com.mas6y6.masworld.Weapons.Attributes;
+package com.mas6y6.masworld.Items.Attributes;
 
 import com.mas6y6.masworld.Masworld;
 import com.mas6y6.masworld.Objects.TextSymbols;
@@ -10,16 +10,15 @@ import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Player;
 import org.bukkit.persistence.PersistentDataType;
 
-public class EvokerBookSpacing{
+public class DynamitePower {
     public Masworld main;
-    public String attributetarget = "evoker_book_spacing";
 
-    public EvokerBookSpacing(Masworld plugin) {
+    public DynamitePower(Masworld plugin) {
         this.main = plugin;
     }
 
     public int set(CommandContext<CommandSourceStack> context) {
-        Double value = context.getArgument("value",Double.class);
+        Float value = context.getArgument("value",Float.class);
 
         CommandSourceStack source = context.getSource();
 
@@ -33,18 +32,19 @@ public class EvokerBookSpacing{
             }
         }
 
-        NamespacedKey namespace = new NamespacedKey(this.main, attributetarget);
+        NamespacedKey namespace = new NamespacedKey(this.main, "dynamite_power");
 
         player.getInventory().getItemInMainHand().editMeta(meta -> {
-            meta.getPersistentDataContainer().set(namespace, PersistentDataType.DOUBLE, value);
+            meta.getPersistentDataContainer().set(namespace, PersistentDataType.FLOAT, value);
         });
 
-        player.sendMessage(TextSymbols.SUCCESS.append(Component.text("Successfully change \"masworld:"+attributetarget+"\" = \""+ value +"\".").color(NamedTextColor.GREEN)));
+        player.sendMessage(TextSymbols.SUCCESS.append(Component.text("Successfully change \"masworld:dynamite_power\" = \""+ value +"\".").color(NamedTextColor.GREEN)));
 
         return 0;
     }
 
     public int reset(CommandContext<CommandSourceStack> context) {
+
         CommandSourceStack source = context.getSource();
 
         if (!(source.getSender() instanceof Player player)) {
@@ -57,13 +57,13 @@ public class EvokerBookSpacing{
             }
         }
 
-        NamespacedKey namespace = new NamespacedKey(this.main, "shulker_sword_range");
+        NamespacedKey namespace = new NamespacedKey(this.main, "dynamite_power");
 
         player.getInventory().getItemInMainHand().editMeta(meta -> {
             meta.getPersistentDataContainer().remove(namespace);
         });
 
-        player.sendMessage(TextSymbols.SUCCESS.append(Component.text("Successfully removed \"masworld:"+attributetarget+"\" from item.").color(NamedTextColor.GREEN)));
+        player.sendMessage(TextSymbols.SUCCESS.append(Component.text("Successfully removed \"masworld:dynamite_power\" from item.").color(NamedTextColor.GREEN)));
 
         return 0;
     }
@@ -81,11 +81,11 @@ public class EvokerBookSpacing{
             }
         }
 
-        NamespacedKey namespace = new NamespacedKey(this.main, "shulker_sword_range");
+        NamespacedKey namespace = new NamespacedKey(this.main, "dynamite_power");
 
-        Double value = player.getInventory().getItemInMainHand().getPersistentDataContainer().get(namespace,PersistentDataType.DOUBLE);
+        Float value = player.getInventory().getItemInMainHand().getPersistentDataContainer().get(namespace,PersistentDataType.FLOAT);
 
-        player.sendMessage(TextSymbols.SUCCESS.append(Component.text("\"masworld:"+attributetarget+"\" = \""+ value +"\"").color(NamedTextColor.GREEN)));
+        player.sendMessage(TextSymbols.SUCCESS.append(Component.text("\"masworld:dynamite_power\" = \""+ value +"\"").color(NamedTextColor.GREEN)));
 
         return 0;
     }
