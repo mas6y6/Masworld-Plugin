@@ -1,4 +1,4 @@
-package com.mas6y6.masworld.Weapons.Attributes;
+package com.mas6y6.masworld.Items.Attributes;
 
 import com.mas6y6.masworld.Masworld;
 import com.mas6y6.masworld.Objects.TextSymbols;
@@ -10,16 +10,16 @@ import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Player;
 import org.bukkit.persistence.PersistentDataType;
 
-public class EvokerBookCooldown{
+public class EvokerBookRange{
     public Masworld main;
-    public String attributetarget = "evoker_book_cooldown";
+    public String attributetarget = "evoker_book_range";
 
-    public EvokerBookCooldown(Masworld plugin) {
+    public EvokerBookRange(Masworld plugin) {
         this.main = plugin;
     }
 
     public int set(CommandContext<CommandSourceStack> context) {
-        Long value = context.getArgument("value",Long.class);
+        Integer value = context.getArgument("value",Integer.class);
 
         CommandSourceStack source = context.getSource();
 
@@ -36,7 +36,7 @@ public class EvokerBookCooldown{
         NamespacedKey namespace = new NamespacedKey(this.main, attributetarget);
 
         player.getInventory().getItemInMainHand().editMeta(meta -> {
-            meta.getPersistentDataContainer().set(namespace, PersistentDataType.LONG, value);
+            meta.getPersistentDataContainer().set(namespace, PersistentDataType.INTEGER, value);
         });
 
         player.sendMessage(TextSymbols.SUCCESS.append(Component.text("Successfully change \"masworld:"+attributetarget+"\" = \""+ value +"\".").color(NamedTextColor.GREEN)));
@@ -83,7 +83,7 @@ public class EvokerBookCooldown{
 
         NamespacedKey namespace = new NamespacedKey(this.main, "shulker_sword_range");
 
-        Long value = player.getInventory().getItemInMainHand().getPersistentDataContainer().get(namespace,PersistentDataType.LONG);
+        Integer value = player.getInventory().getItemInMainHand().getPersistentDataContainer().get(namespace,PersistentDataType.INTEGER);
 
         player.sendMessage(TextSymbols.SUCCESS.append(Component.text("\"masworld:"+attributetarget+"\" = \""+ value +"\"").color(NamedTextColor.GREEN)));
 

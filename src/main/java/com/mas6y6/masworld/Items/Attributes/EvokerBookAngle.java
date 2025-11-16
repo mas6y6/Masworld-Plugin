@@ -1,4 +1,4 @@
-package com.mas6y6.masworld.Weapons.Attributes;
+package com.mas6y6.masworld.Items.Attributes;
 
 import com.mas6y6.masworld.Masworld;
 import com.mas6y6.masworld.Objects.TextSymbols;
@@ -10,15 +10,16 @@ import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Player;
 import org.bukkit.persistence.PersistentDataType;
 
-public class ShulkerSwordCooldown {
+public class EvokerBookAngle{
     public Masworld main;
+    public String attributetarget = "evoker_book_angle";
 
-    public ShulkerSwordCooldown(Masworld plugin) {
+    public EvokerBookAngle(Masworld plugin) {
         this.main = plugin;
     }
 
     public int set(CommandContext<CommandSourceStack> context) {
-        Long value = context.getArgument("value",Long.class);
+        Double value = context.getArgument("value",Double.class);
 
         CommandSourceStack source = context.getSource();
 
@@ -32,19 +33,18 @@ public class ShulkerSwordCooldown {
             }
         }
 
-        NamespacedKey namespace = new NamespacedKey(this.main, "shulker_sword_cooldown");
+        NamespacedKey namespace = new NamespacedKey(this.main, attributetarget);
 
         player.getInventory().getItemInMainHand().editMeta(meta -> {
-            meta.getPersistentDataContainer().set(namespace, PersistentDataType.LONG, value);
+            meta.getPersistentDataContainer().set(namespace, PersistentDataType.DOUBLE, value);
         });
 
-        player.sendMessage(TextSymbols.SUCCESS.append(Component.text("Successfully change \"masworld:shulker_sword_cooldown\" = \""+ value +"\".").color(NamedTextColor.GREEN)));
+        player.sendMessage(TextSymbols.SUCCESS.append(Component.text("Successfully change \"masworld:"+attributetarget+"\" = \""+ value +"\".").color(NamedTextColor.GREEN)));
 
         return 0;
     }
 
     public int reset(CommandContext<CommandSourceStack> context) {
-
         CommandSourceStack source = context.getSource();
 
         if (!(source.getSender() instanceof Player player)) {
@@ -57,13 +57,13 @@ public class ShulkerSwordCooldown {
             }
         }
 
-        NamespacedKey namespace = new NamespacedKey(this.main, "shulker_sword_cooldown");
+        NamespacedKey namespace = new NamespacedKey(this.main, "shulker_sword_range");
 
         player.getInventory().getItemInMainHand().editMeta(meta -> {
             meta.getPersistentDataContainer().remove(namespace);
         });
 
-        player.sendMessage(TextSymbols.SUCCESS.append(Component.text("Successfully removed \"masworld:shulker_sword_cooldown\" from item.").color(NamedTextColor.GREEN)));
+        player.sendMessage(TextSymbols.SUCCESS.append(Component.text("Successfully removed \"masworld:"+attributetarget+"\" from item.").color(NamedTextColor.GREEN)));
 
         return 0;
     }
@@ -81,11 +81,11 @@ public class ShulkerSwordCooldown {
             }
         }
 
-        NamespacedKey namespace = new NamespacedKey(this.main, "shulker_sword_cooldown");
+        NamespacedKey namespace = new NamespacedKey(this.main, "shulker_sword_range");
 
-        Long value = player.getInventory().getItemInMainHand().getPersistentDataContainer().get(namespace,PersistentDataType.LONG);
+        Double value = player.getInventory().getItemInMainHand().getPersistentDataContainer().get(namespace,PersistentDataType.DOUBLE);
 
-        player.sendMessage(TextSymbols.SUCCESS.append(Component.text("\"masworld:shulker_sword_cooldown\" = \""+ value +"\"").color(NamedTextColor.GREEN)));
+        player.sendMessage(TextSymbols.SUCCESS.append(Component.text("\"masworld:"+attributetarget+"\" = \""+ value +"\"").color(NamedTextColor.GREEN)));
 
         return 0;
     }

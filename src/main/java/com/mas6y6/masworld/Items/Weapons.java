@@ -1,13 +1,13 @@
-package com.mas6y6.masworld.Weapons;
+package com.mas6y6.masworld.Items;
 
 import com.mas6y6.masworld.Masworld;
 import com.mas6y6.masworld.Objects.TextSymbols;
-import com.mas6y6.masworld.Weapons.Attributes.DynamiteFuse;
-import com.mas6y6.masworld.Weapons.Attributes.DynamitePower;
-import com.mas6y6.masworld.Weapons.Attributes.SpecialEffect;
-import com.mas6y6.masworld.Weapons.Attributes.WeaponDamage;
-import com.mas6y6.masworld.Weapons.Attributes.*;
-import com.mas6y6.masworld.Weapons.Systems.PumpkinBlindness;
+import com.mas6y6.masworld.Items.Attributes.DynamiteFuse;
+import com.mas6y6.masworld.Items.Attributes.DynamitePower;
+import com.mas6y6.masworld.Items.Attributes.SpecialEffect;
+import com.mas6y6.masworld.Items.Attributes.WeaponDamage;
+import com.mas6y6.masworld.Items.Attributes.*;
+import com.mas6y6.masworld.Items.Systems.PumpkinBlindness;
 import com.mojang.brigadier.arguments.*;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
@@ -16,6 +16,7 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.entity.Player;
+import com.mas6y6.masworld.Items.DrFesh.SuperSpatula;
 
 public class Weapons {
     public Masworld main;
@@ -46,6 +47,7 @@ public class Weapons {
         this.main = main;
         this.main.getServer().getPluginManager().registerEvents(new WeaponListeners(this), this.main);
         this.main.getServer().getPluginManager().registerEvents(new EnchantmentListeners(this), this.main);
+        this.main.getServer().getPluginManager().registerEvents(new SuperSpatula(this), this.main);
 
         this.specialEffect = new SpecialEffect(this.main);
 

@@ -1,4 +1,4 @@
-package com.mas6y6.masworld.Weapons.Attributes;
+package com.mas6y6.masworld.Items.Attributes;
 
 import com.mas6y6.masworld.Masworld;
 import com.mas6y6.masworld.Objects.TextSymbols;
@@ -10,16 +10,16 @@ import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Player;
 import org.bukkit.persistence.PersistentDataType;
 
-public class EvokerBookBeamCount{
+public class EvokerBookCooldown{
     public Masworld main;
-    public String attributetarget = "evoker_book_beamcount";
+    public String attributetarget = "evoker_book_cooldown";
 
-    public EvokerBookBeamCount(Masworld plugin) {
+    public EvokerBookCooldown(Masworld plugin) {
         this.main = plugin;
     }
 
     public int set(CommandContext<CommandSourceStack> context) {
-        Integer value = context.getArgument("value",Integer.class);
+        Long value = context.getArgument("value",Long.class);
 
         CommandSourceStack source = context.getSource();
 
@@ -36,7 +36,7 @@ public class EvokerBookBeamCount{
         NamespacedKey namespace = new NamespacedKey(this.main, attributetarget);
 
         player.getInventory().getItemInMainHand().editMeta(meta -> {
-            meta.getPersistentDataContainer().set(namespace, PersistentDataType.INTEGER, value);
+            meta.getPersistentDataContainer().set(namespace, PersistentDataType.LONG, value);
         });
 
         player.sendMessage(TextSymbols.SUCCESS.append(Component.text("Successfully change \"masworld:"+attributetarget+"\" = \""+ value +"\".").color(NamedTextColor.GREEN)));
@@ -83,7 +83,7 @@ public class EvokerBookBeamCount{
 
         NamespacedKey namespace = new NamespacedKey(this.main, "shulker_sword_range");
 
-        Integer value = player.getInventory().getItemInMainHand().getPersistentDataContainer().get(namespace,PersistentDataType.INTEGER);
+        Long value = player.getInventory().getItemInMainHand().getPersistentDataContainer().get(namespace,PersistentDataType.LONG);
 
         player.sendMessage(TextSymbols.SUCCESS.append(Component.text("\"masworld:"+attributetarget+"\" = \""+ value +"\"").color(NamedTextColor.GREEN)));
 

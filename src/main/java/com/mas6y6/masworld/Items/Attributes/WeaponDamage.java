@@ -1,4 +1,4 @@
-package com.mas6y6.masworld.Weapons.Attributes;
+package com.mas6y6.masworld.Items.Attributes;
 
 import com.mas6y6.masworld.Masworld;
 import com.mas6y6.masworld.Objects.TextSymbols;
@@ -12,7 +12,6 @@ import org.bukkit.attribute.AttributeModifier;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.EquipmentSlotGroup;
 import org.bukkit.inventory.meta.ItemMeta;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.Collection;
 

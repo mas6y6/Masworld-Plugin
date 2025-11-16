@@ -1,6 +1,6 @@
-package com.mas6y6.masworld.Weapons.Systems;
+package com.mas6y6.masworld.Items.Systems;
 
-import com.mas6y6.masworld.Weapons.Weapons;
+import com.mas6y6.masworld.Items.Weapons;
 import io.papermc.paper.persistence.PersistentDataContainerView;
 import org.bukkit.*;
 import org.bukkit.entity.Player;
