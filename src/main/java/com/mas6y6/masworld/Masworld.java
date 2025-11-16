@@ -83,8 +83,6 @@ public final class Masworld extends JavaPlugin {
 
             commands.registrar().register(weapons.buildAdminStickCMD().build());
             commands.registrar().register(this.xpBottler.cmd.build());
-
-            personalVault.registerCommands(commands);
         });
 
         getLogger().info("Registered Commands");
