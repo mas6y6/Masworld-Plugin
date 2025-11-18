@@ -1,6 +1,7 @@
 package com.mas6y6.masworld.Items;
 
 import com.mas6y6.masworld.Masworld;
+import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.*;
@@ -428,6 +429,40 @@ public class WeaponListeners implements Listener {
 
                 player.getWorld().playSound(player.getLocation(), Sound.ENTITY_GHAST_SHOOT, 1f, 1f);
             }, delay);
+        }
+    }
+
+    @EventHandler
+    public void dragonSythe(PlayerInteractEvent event) {
+        NamespacedKey specialEffectKey = new NamespacedKey(this.weapons.main, "special_effect");
+
+        ItemStack item = event.getItem();
+        if (item == null) return;
+
+        ItemMeta meta = item.getItemMeta();
+        if (meta == null) return;
+
+        PersistentDataContainer container = meta.getPersistentDataContainer();
+
+        if (!container.has(specialEffectKey, PersistentDataType.STRING)) return;
+        if (!Objects.equals(container.get(specialEffectKey, PersistentDataType.STRING), "dragon_sythe")) return;
+
+        Player player = event.getPlayer();
+
+        if (event.getAction() == Action.RIGHT_CLICK_AIR || event.getAction() == Action.RIGHT_CLICK_BLOCK) {
+            event.setCancelled(true);
+
+            Key dragonSytheKey = Key.key("masworld", "dragon_sythe");
+
+            if (player.getCooldown(dragonSytheKey) == 0) {
+                player.getWorld().spawn(player.getEyeLocation(), DragonFireball.class, fb -> {
+                    fb.setDirection(player.getLocation().getDirection().multiply(2));
+                });
+
+                player.getWorld().playSound(player.getLocation(), Sound.ENTITY_GHAST_SHOOT, 1f, 1f);
+
+                player.setCooldown(dragonSytheKey, 800);
+            }
         }
     }
 }
