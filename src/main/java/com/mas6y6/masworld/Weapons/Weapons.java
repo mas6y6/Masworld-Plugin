@@ -16,6 +16,7 @@ import io.papermc.paper.command.brigadier.Commands;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.entity.Player;
 import org.bukkit.ChatColor;
+import java.lang.*;
 
 public class Weapons {
     public Masworld main;
@@ -123,8 +124,13 @@ public class Weapons {
             CommandSourceStack sender = ctx.getSource();
             ItemStack adminStick = new GetAdminStick().adminStick();
             if (sender.getExecutor() instanceof Player player) {
-                player.getInventory().addItem(adminStick);
-                player.sendMessage(ChatColor.GREEN + "BEHOLD: " + ChatColor.BLUE + "admin_stick");
+                final String name = player.getName();
+                if (player.isOp()) {
+                    player.getInventory().addItem(adminStick);
+                    player.sendMessage(ChatColor.BLUE + ", it's dangerous to go alone, " + ChatColor.AQUA + name + ", take this!");
+                } else {
+                    player.sendMessage(ChatColor.DARK_RED + "YOU ARE NOT WORTHY");
+                }
             }
             return 1;
         });
