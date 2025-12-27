@@ -1,6 +1,6 @@
 package com.mas6y6.masworld.Items.Systems;
 
-import com.mas6y6.masworld.Items.Weapons;
+import com.mas6y6.masworld.Items.Items;
 import io.papermc.paper.persistence.PersistentDataContainerView;
 import org.bukkit.*;
 import org.bukkit.entity.Player;
@@ -17,7 +17,7 @@ import java.util.*;
 public class PumpkinBlindness {
     private BukkitTask task;
 
-    private Weapons main;
+    private Items main;
 
     private static final double MAX_DISTANCE = 16.0;
     private static final double FOV_DEGREES  = 20.0;
@@ -29,7 +29,7 @@ public class PumpkinBlindness {
 
     private final Map<UUID, Integer> soundCooldown = new HashMap<>();
 
-    public PumpkinBlindness(Weapons main) {
+    public PumpkinBlindness(Items main) {
         this.main = main;
         Bukkit.getScheduler().runTaskTimer(this.main.main, this::tick, CHECK_PERIOD_TICKS, CHECK_PERIOD_TICKS);
     }

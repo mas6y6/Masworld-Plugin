@@ -18,7 +18,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.entity.Player;
 import com.mas6y6.masworld.Items.DrFesh.SuperSpatula;
 
-public class Weapons {
+public class Items {
     public Masworld main;
     public LiteralArgumentBuilder<CommandSourceStack> commands = Commands.literal("attributes");
     public LiteralArgumentBuilder<CommandSourceStack> adminStickCMD = Commands.literal("iwantadminstick");
@@ -43,7 +43,7 @@ public class Weapons {
 
     public PumpkinBlindness pumpkinBlindness;
     
-    public Weapons(Masworld main) {
+    public Items(Masworld main) {
         this.main = main;
         this.main.getServer().getPluginManager().registerEvents(new WeaponListeners(this), this.main);
         this.main.getServer().getPluginManager().registerEvents(new EnchantmentListeners(this), this.main);

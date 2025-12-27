@@ -1,9 +1,13 @@
 package com.mas6y6.masworld.Items;
 
 import com.mas6y6.masworld.Masworld;
+import com.mas6y6.masworld.Objects.TextSymbols;
+import de.tr7zw.nbtapi.NBT;
+import de.tr7zw.nbtapi.iface.ReadWriteNBT;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
+import net.momirealms.craftengine.libraries.nbt.CompoundTag;
 import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
@@ -15,6 +19,7 @@ import org.bukkit.event.entity.EntityShootBowEvent;
 import org.bukkit.event.entity.ProjectileHitEvent;
 import org.bukkit.event.entity.ProjectileLaunchEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.player.PlayerToggleSneakEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataContainer;
@@ -25,9 +30,9 @@ import org.bukkit.util.Vector;
 import java.util.*;
 
 public class WeaponListeners implements Listener {
-    public Weapons weapons;
+    public Items weapons;
 
-    public WeaponListeners(Weapons weapons) {
+    public WeaponListeners(Items weapons) {
         this.weapons = weapons;
     }
 
@@ -456,6 +461,9 @@ public class WeaponListeners implements Listener {
 
             if (player.getCooldown(dragonSytheKey) == 0) {
                 player.getWorld().spawn(player.getEyeLocation(), DragonFireball.class, fb -> {
+                    fb.setShooter(player);
+
+                    fb.setVelocity(player.getLocation().getDirection().multiply(2));
                     fb.setDirection(player.getLocation().getDirection().multiply(2));
                 });
 
@@ -464,5 +472,257 @@ public class WeaponListeners implements Listener {
                 player.setCooldown(dragonSytheKey, 800);
             }
         }
+    }
+
+    @EventHandler
+    public void gravityStriker(PlayerInteractEvent event) {
+        NamespacedKey specialEffectKey = new NamespacedKey(this.weapons.main, "special_effect");
+
+        ItemStack item = event.getItem();
+        if (item == null) return;
+
+        ItemMeta meta = item.getItemMeta();
+        if (meta == null) return;
+
+        PersistentDataContainer container = meta.getPersistentDataContainer();
+        if (!"gravity_striker".equals(container.get(specialEffectKey, PersistentDataType.STRING))) return;
+
+        if (event.getAction() != Action.RIGHT_CLICK_AIR &&
+                event.getAction() != Action.RIGHT_CLICK_BLOCK) return;
+
+        Player player = event.getPlayer();
+        Key cooldownKey = Key.key("masworld", "gravity_striker");
+
+        if (player.getCooldown(cooldownKey) > 0) return;
+
+        double pullRadius = 10;
+        double pullSpeed = 0.2;
+        int durationTicks = 40;
+
+        Location playerLoc = player.getLocation().clone();
+
+        // Keep track of rings
+        class Ring {
+            double radius;
+            int age = 0;
+            int lifetime;
+
+            Ring(double radius, int lifetime) {
+                this.radius = radius;
+                this.lifetime = lifetime;
+            }
+
+            void spawnParticles() {
+                int points = 30;
+                double currentRadius = radius * (1.0 - ((double) age / lifetime));
+                for (int i = 0; i < points; i++) {
+                    double angle = 2 * Math.PI * i / points;
+                    double x = Math.cos(angle) * currentRadius;
+                    double z = Math.sin(angle) * currentRadius;
+                    Location particleLoc = playerLoc.clone().add(x, 0.1, z);
+                    playerLoc.getWorld().spawnParticle(
+                            Particle.PORTAL,
+                            particleLoc,
+                            2,
+                            0, 0, 0,
+                            0
+                    );
+                }
+                age++;
+            }
+
+            boolean isExpired() {
+                return age >= lifetime;
+            }
+        }
+
+        List<Ring> activeRings = new ArrayList<>();
+
+        new BukkitRunnable() {
+            int ticks = 0;
+
+            @Override
+            public void run() {
+                if (!player.isOnline()) {
+                    cancel();
+                    return;
+                }
+
+                if (ticks % 5 == 0) {
+                    activeRings.add(new Ring(pullRadius, 20));
+                }
+
+                for (Entity entity : player.getNearbyEntities(pullRadius, pullRadius, pullRadius)) {
+                    if (entity.equals(player)) continue;
+                    if (entity instanceof Player p) {
+                        if (p.getGameMode() == GameMode.CREATIVE) {
+                            continue;
+                        }
+
+                        if (p.getGameMode() == GameMode.SPECTATOR) {
+                            continue;
+                        }
+                    }
+
+                    Vector direction = playerLoc.toVector().subtract(entity.getLocation().toVector());
+                    direction.setY(Math.abs(direction.getY()) + 0.2);
+                    direction.normalize().multiply(pullSpeed);
+                    entity.setVelocity(direction);
+                }
+
+                Iterator<Ring> iterator = activeRings.iterator();
+                while (iterator.hasNext()) {
+                    Ring ring = iterator.next();
+                    ring.spawnParticles();
+                    if (ring.isExpired()) iterator.remove();
+                }
+
+                ticks++;
+
+                if (ticks >= durationTicks) {
+                    cancel();
+                }
+            }
+        }.runTaskTimer(this.weapons.main, 0L, 1L);
+
+        player.setCooldown(cooldownKey, 400);
+    }
+
+    private final Map<UUID, Location> voidBeam_playerPoints = new HashMap<>();
+
+    @EventHandler
+    public void voidBeam(PlayerInteractEvent event) {
+        Player player = event.getPlayer();
+        ItemStack item = event.getItem();
+        if (item == null) return;
+
+        ItemMeta meta = item.getItemMeta();
+        if (meta == null) return;
+
+        NamespacedKey specialEffectKey = new NamespacedKey(this.weapons.main, "special_effect");
+        PersistentDataContainer container = meta.getPersistentDataContainer();
+
+        if (!"void_beam".equals(container.get(specialEffectKey, PersistentDataType.STRING))) return;
+
+        if (!event.getAction().name().contains("RIGHT_CLICK")) return;
+
+        // Get the block player is looking at within 50 blocks
+        Block targetBlock = player.getTargetBlockExact(50);
+        if (targetBlock == null) {
+            player.sendMessage("No block in sight!");
+            return;
+        }
+
+        Location targetLocation = targetBlock.getLocation().add(0.5, 0.5, 0.5); // center
+
+        UUID playerId = player.getUniqueId();
+
+        if (!voidBeam_playerPoints.containsKey(playerId)) {
+            player.getWorld().playSound(player.getLocation(), Sound.ENTITY_ENDER_EYE_DEATH, 1f, 1f);
+            voidBeam_playerPoints.put(playerId, targetLocation);
+            player.getWorld().spawnParticle(
+                    Particle.END_ROD,
+                    targetLocation,
+                    20,
+                    0.3, 0.3, 0.3,
+                    0.01
+            );
+            player.sendMessage(TextSymbols.info("First point set!"));
+        } else {
+            Location start = voidBeam_playerPoints.remove(playerId);
+            Location end = targetLocation;
+
+            if (start.distanceSquared(end) <= 0.001) {
+                player.sendMessage(TextSymbols.error("Points are too close together."));
+                return;
+            }
+
+            player.getWorld().spawnParticle(
+                    Particle.END_ROD,
+                    targetLocation,
+                    20,
+                    0.3, 0.3, 0.3,
+                    0.01
+            );
+
+            player.sendMessage(TextSymbols.info("Second point set! Creating beam."));
+            player.getWorld().playSound(player.getLocation(), Sound.BLOCK_BEACON_ACTIVATE, 1f, 1f);
+            spawnVoidBeam(start, end, player);
+            player.setCooldown(Key.key("masworld", "void_beam"), 500);
+        }
+    }
+
+    private void spawnVoidBeam(Location start, Location end, Player shooter) {
+        World world = start.getWorld();
+        if (world == null) return;
+
+        Vector direction = end.toVector().subtract(start.toVector());
+        double length = direction.length();
+        if (length <= 0.001) {
+            shooter.sendMessage(TextSymbols.error("Something went wrong while executing a function."));
+            shooter.sendMessage(TextSymbols.error("Points are too close together."));
+            return;
+        }
+
+        direction.normalize();
+
+        double step = 0.2;
+        Set<UUID> alreadyHit = new HashSet<>();
+
+        new BukkitRunnable() {
+            int ticks = 0;
+            final int maxTicks = 20 * 20;
+
+            @Override
+            public void run() {
+                if (ticks >= maxTicks) {
+                    cancel();
+                    return;
+                }
+
+                for (double i = 0; i <= length; i += step) {
+                    Location point = start.clone().add(direction.clone().multiply(i));
+
+                    world.spawnParticle(Particle.PORTAL, point, 3, 0, 0, 0, 0);
+
+                    for (Entity entity : world.getNearbyEntities(point, 1, 1, 1)) {
+                        if (!(entity instanceof Damageable target)) continue;
+
+                        if (target.equals(shooter)) continue;
+                        if (alreadyHit.contains(target.getUniqueId())) continue;
+
+                        target.damage(2.0, shooter);
+                        alreadyHit.add(target.getUniqueId());
+                    }
+                }
+
+                alreadyHit.clear();
+                ticks++;
+            }
+        }.runTaskTimer(this.weapons.main, 0L, 1L);
+    }
+
+    @EventHandler
+    public void entityStringTest(PlayerToggleSneakEvent event) {
+        Player player = event.getPlayer();
+        if (!(event.isSneaking())) return;
+
+        Entity target = player.getTargetEntity(5);
+        if (target == null) return;
+
+        ReadWriteNBT nbt = NBT.parseNBT(Objects.requireNonNull(target.getAsString()));
+        nbt.removeKey("Paper.Origin");
+        nbt.removeKey("Paper.OriginWorld");
+        nbt.removeKey("Rotation");
+        nbt.removeKey("Motion");
+        nbt.removeKey("FallFlying");
+        nbt.removeKey("OnGround");
+        nbt.removeKey("FallDistance");
+        nbt.removeKey("PortalCooldown");
+        nbt.removeKey("Velocity");
+
+        player.sendMessage(nbt.toString());
+
+
     }
 }

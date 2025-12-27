@@ -4,7 +4,7 @@ import com.mas6y6.masworld.Commands.XPBottler;
 import com.mas6y6.masworld.Economy.MasEconomy;
 import com.mas6y6.masworld.ItemEffects.ItemEffects;
 import com.mas6y6.masworld.Objects.TextSymbols;
-import com.mas6y6.masworld.Items.Weapons;
+import com.mas6y6.masworld.Items.Items;
 import com.mas6y6.masworld.Chat.Chat;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
@@ -24,9 +24,8 @@ public final class Masworld extends JavaPlugin {
     public Configuration config;
     public ItemEffects itemeffects;
     public MasEconomy maseconomy;
-    public Weapons weapons;
+    public Items weapons;
     public Chat chat;
-
     public XPBottler xpBottler;
     public PersonalVault personalVault;
 
@@ -64,7 +63,7 @@ public final class Masworld extends JavaPlugin {
 
         this.maseconomy = new MasEconomy(this);
 
-        this.weapons = new Weapons(this);
+        this.weapons = new Items(this);
         this.chat = new Chat(this);
 
         this.xpBottler = new XPBottler(this);

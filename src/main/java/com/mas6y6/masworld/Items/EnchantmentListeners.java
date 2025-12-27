@@ -23,7 +23,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 import java.util.*;
 
 public class EnchantmentListeners implements Listener {
-    public Weapons weapons;
+    public Items weapons;
 
     private final Map<UUID, Long> cooldowns = new HashMap<>();
     private final long COOLDOWN_MS = 200;
@@ -32,7 +32,7 @@ public class EnchantmentListeners implements Listener {
     private final int dropCooldownTicks = 20;
 
 
-    public EnchantmentListeners(Weapons weapons) {
+    public EnchantmentListeners(Items weapons) {
         this.weapons = weapons;
 
         Bukkit.getScheduler().runTaskTimer(this.weapons.main,() -> {
