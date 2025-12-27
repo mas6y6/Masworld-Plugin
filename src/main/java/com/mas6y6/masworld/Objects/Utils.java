@@ -3,11 +3,16 @@ package com.mas6y6.masworld.Objects;
 import com.mas6y6.masworld.Objects.Exceptions.IllegalKeyException;
 import io.papermc.paper.registry.RegistryAccess;
 import io.papermc.paper.registry.RegistryKey;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.TextColor;
 import org.bukkit.*;
 import org.bukkit.block.Block;
-import org.bukkit.block.BlockType;
 import org.bukkit.enchantments.Enchantment;
-import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.entity.Player;
+import org.bukkit.inventory.FurnaceRecipe;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.Recipe;
 import org.bukkit.potion.PotionEffectType;
 import org.jetbrains.annotations.NotNull;
 
@@ -135,5 +140,82 @@ public class Utils {
         }
 
         return false;
+    }
+
+    public static Component createEnchantmentComponent(String unicode, NamedTextColor color, String title) {
+        Component icon = Component.text(unicode).color(color);
+        Component text = Component.text(" " + title);
+        return icon.append(text);
+    }
+
+    public static Component createEnchantmentComponent(String unicode, TextColor color, String title) {
+        Component icon = Component.text(unicode).color(color);
+        Component text = Component.text(" " + title);
+        return icon.append(text);
+    }
+
+    private static int getExpAtLevel(int level) {
+        if (level <= 16) {
+            return level * level + 6 * level;
+        }
+        if (level <= 31) {
+            return (int) (2.5 * level * level - 40.5 * level + 360);
+        }
+        return (int) (4.5 * level * level - 162.5 * level + 2220);
+    }
+
+    public static void takeExpPoints(Player player, int points) {
+        int total = getTotalExp(player);
+        int newTotal = Math.max(0, total - points);
+
+        player.setExp(0);
+        player.setLevel(0);
+        player.setTotalExperience(0);
+
+        player.giveExp(newTotal);
+    }
+    public static int getTotalExp(Player player) {
+        int level = player.getLevel();
+        float progress = player.getExp();
+
+        int expToNext;
+        if (level >= 30) {
+            expToNext = 9 * level - 158;
+        } else if (level >= 15) {
+            expToNext = 5 * level - 38;
+        } else {
+            expToNext = 2 * level + 7;
+        }
+
+        int expThisLevel = Math.round(progress * expToNext);
+        return getExpAtLevel(level) + expThisLevel;
+    }
+
+    public static boolean isDay(World world) {
+        long time = world.getTime();
+        return time >= 0 && time < 12300;
+    }
+
+    public static Material getCookedMaterial(Material m) {
+        return switch(m) {
+            case IRON_ORE, RAW_IRON -> Material.IRON_INGOT;
+            case GOLD_ORE, RAW_GOLD -> Material.GOLD_INGOT;
+            case COPPER_ORE, RAW_COPPER -> Material.COPPER_INGOT;
+            default -> null;
+        };
+    }
+
+    public static Enchantment getEnchantment(NamespacedKey key) {
+        return RegistryAccess.registryAccess()
+                .getRegistry(RegistryKey.ENCHANTMENT)
+                .getOrThrow(key);
+    }
+
+    public static Enchantment getEnchantment(String namespace, String key) {
+        NamespacedKey namespacedKey = new NamespacedKey(namespace,key);
+
+        return RegistryAccess.registryAccess()
+                .getRegistry(RegistryKey.ENCHANTMENT)
+                .getOrThrow(namespacedKey);
     }
 }

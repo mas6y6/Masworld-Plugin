@@ -1,7 +1,8 @@
-package com.mas6y6.masworld.Weapons;
+package com.mas6y6.masworld.Items;
 
 import com.mas6y6.masworld.Objects.Utils;
 import io.papermc.paper.registry.RegistryAccess;
+import io.papermc.paper.registry.RegistryKey;
 import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.enchantments.Enchantment;
@@ -9,23 +10,21 @@ import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
-import org.bukkit.event.entity.EntityShootBowEvent;
-import org.bukkit.event.entity.ProjectileHitEvent;
-import org.bukkit.event.entity.ProjectileLaunchEvent;
+import org.bukkit.event.block.BlockDropItemEvent;
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
+import org.bukkit.inventory.EntityEquipment;
 import org.bukkit.inventory.ItemStack;
-import io.papermc.paper.registry.RegistryKey;
+import org.bukkit.inventory.meta.Damageable;
 import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.persistence.PersistentDataContainer;
-import org.bukkit.persistence.PersistentDataType;
-import org.bukkit.util.Vector;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
 
-public class Listeners implements Listener {
-    public Weapons weapons;
+public class EnchantmentListeners implements Listener {
+    public Items weapons;
+
     private final Map<UUID, Long> cooldowns = new HashMap<>();
     private final long COOLDOWN_MS = 200;
 
@@ -33,8 +32,16 @@ public class Listeners implements Listener {
     private final int dropCooldownTicks = 20;
 
 
-    public Listeners(Weapons weapons) {
+    public EnchantmentListeners(Items weapons) {
         this.weapons = weapons;
+
+        Bukkit.getScheduler().runTaskTimer(this.weapons.main,() -> {
+            for (Player player : this.weapons.main.getServer().getOnlinePlayers()) {
+                ItemMagnet(player);
+            }
+        }, 0L,20L);
+
+        Bukkit.getScheduler().runTaskTimer(this.weapons.main,this::photosynthisEnchantmentTick, 0L, 80L);
     }
 
     @EventHandler
@@ -46,12 +53,6 @@ public class Listeners implements Listener {
         Bukkit.getScheduler().runTaskLater(this.weapons.main, () -> {
             recentlyDropped.remove(dropped.getUniqueId());
         }, dropCooldownTicks);
-
-        Bukkit.getScheduler().runTaskTimer(this.weapons.main,() -> {
-            for (Player player : this.weapons.main.getServer().getOnlinePlayers()) {
-                ItemMagnet(player);
-            }
-        }, 0L,20L);
     }
 
 
@@ -209,7 +210,6 @@ public class Listeners implements Listener {
         int level = boots.getEnchantmentLevel(itemMagnet);
         double radius = 2.0 + (level * 2.0);
 
-        int pulled = 0;
 
         spawnMagnetParticles(player, radius);
 
@@ -245,126 +245,162 @@ public class Listeners implements Listener {
     }
 
     @EventHandler
-    public void dynamiteThrow(ProjectileLaunchEvent event) {
-        Projectile projectile = event.getEntity();
+    private void shockerEnchantment(EntityDamageByEntityEvent event) {
+        if (!(event.getDamager() instanceof LivingEntity attacker)) return;
 
-        if (projectile.getShooter() instanceof Player player) {
-            ItemStack item = player.getInventory().getItemInMainHand();
+        ItemStack weapon = attacker.getEquipment().getItemInMainHand();
+        Entity victim = event.getEntity();
 
-            if (item.hasItemMeta()) {
-                ItemMeta meta = item.getItemMeta();
-                PersistentDataContainer container = meta.getPersistentDataContainer();
+        NamespacedKey key = new NamespacedKey("masworld", "shocker");
+        Enchantment shockerEnchantment = RegistryAccess.registryAccess()
+                .getRegistry(RegistryKey.ENCHANTMENT)
+                .get(key);
 
-                NamespacedKey specialEffectId = new NamespacedKey(this.weapons.main, "special_effect");
-                NamespacedKey powerkey = new NamespacedKey(this.weapons.main, "dynamite_power");
-                NamespacedKey fusekey = new NamespacedKey(this.weapons.main, "dynamite_fuse");
+        assert shockerEnchantment != null;
+        if (weapon.containsEnchantment(shockerEnchantment)) {
+            World world = victim.getLocation().getWorld();
 
-                if (container.has(specialEffectId, PersistentDataType.STRING)) {
-                    String effect = container.get(specialEffectId, PersistentDataType.STRING);
-                    Long fuse = Objects.requireNonNull(container.get(fusekey, PersistentDataType.LONG));
-                    Float power = Objects.requireNonNull(container.get(powerkey, PersistentDataType.FLOAT));
+            if (world.hasStorm() && world.isThundering()) {
+                world.playSound(victim.getLocation(),Sound.ITEM_TRIDENT_THUNDER, 1.0f, 1.0f);
+                world.strikeLightningEffect(victim.getLocation());
+            }
+        }
+    }
 
-                    if (effect != null) {
-                        projectile.getPersistentDataContainer()
-                                .set(specialEffectId, PersistentDataType.STRING, effect);
+    public void photosynthisEnchantmentTick() {
+        Bukkit.getOnlinePlayers().stream()
+            .filter(p -> p.getWorld().getName().equals("world"))
+            .filter(p -> p.getWorld().isDayTime())
+                .filter(p -> {
+                    Block block = p.getLocation().getBlock();
+                    int highestY = p.getWorld().getHighestBlockYAt(block.getX(), block.getZ());
+                    return block.getY() >= highestY;
+                })
 
-                        projectile.getPersistentDataContainer()
-                                .set(powerkey, PersistentDataType.FLOAT, power);
+                .forEach(this::photosynthesisEnchantmentHandler);
+    }
 
-                        projectile.getPersistentDataContainer()
-                                .set(fusekey, PersistentDataType.LONG, fuse);
+    public void photosynthesisEnchantmentHandler(Player player) {
+        EntityEquipment inventory = player.getEquipment();
+
+        NamespacedKey key = new NamespacedKey("masworld", "photosynthesis");
+        Enchantment photosynthesisEnchantment = RegistryAccess.registryAccess()
+                .getRegistry(RegistryKey.ENCHANTMENT)
+                .getOrThrow(key);
+
+        List<ItemStack> items = List.of(
+            inventory.getItemInMainHand(),
+            inventory.getItemInOffHand(),
+            inventory.getHelmet(),
+            inventory.getChestplate(),
+            inventory.getLeggings(),
+            inventory.getBoots()
+        );
+
+        boolean hasPhotosynthesis = items.stream()
+                .filter(Objects::nonNull)
+                .anyMatch(item -> item.containsEnchantment(photosynthesisEnchantment));
+
+        if (hasPhotosynthesis) {
+            for (ItemStack item : items) {
+                if (item != null && item.containsEnchantment(photosynthesisEnchantment)) {
+                    ItemMeta meta = item.getItemMeta();
+                    if (meta instanceof Damageable damageable) {
+                        int currentDamage = damageable.getDamage();
+                        if (currentDamage > 0) {
+                            damageable.setDamage(currentDamage - 1);
+                            item.setItemMeta((ItemMeta) damageable);
+
+                            player.getWorld().spawnParticle(
+                                    Particle.HAPPY_VILLAGER,
+                                    player.getLocation().getX(),
+                                    player.getLocation().getY(),
+                                    player.getLocation().getZ(),
+                                    2,
+                                    0.2, 0.5, 0.2,
+                                    0.05, // extra
+                                    null,
+                                    true
+                            );
+                        }
                     }
+
                 }
             }
         }
     }
 
     @EventHandler
-    public void dynamiteHit(ProjectileHitEvent event) {
-        if (!(event.getEntity() instanceof Snowball snowball)) return;
+    public void smelterOnBlockDrop(BlockDropItemEvent event) {
+        Player player = event.getPlayer();
+        ItemStack itemInHand = player.getEquipment().getItemInMainHand();
 
-        Projectile projectile = event.getEntity();
-        NamespacedKey specialEffectId = new NamespacedKey(this.weapons.main, "special_effect");
-        NamespacedKey powerkey = new NamespacedKey(this.weapons.main, "dynamite_power");
-        NamespacedKey fusekey = new NamespacedKey(this.weapons.main, "dynamite_fuse");
+        NamespacedKey key = new NamespacedKey("masworld", "smelter");
+        Enchantment smelterEnchantment = RegistryAccess.registryAccess()
+                .getRegistry(RegistryKey.ENCHANTMENT)
+                .getOrThrow(key);
 
-        if (projectile.getPersistentDataContainer().has(specialEffectId, PersistentDataType.STRING)) {
-            String effect = projectile.getPersistentDataContainer().get(specialEffectId, PersistentDataType.STRING);
-            Long fuse = Objects.requireNonNull(projectile.getPersistentDataContainer().get(fusekey, PersistentDataType.LONG));
-            Float power = Objects.requireNonNull(projectile.getPersistentDataContainer().get(powerkey, PersistentDataType.FLOAT));
+        if (!itemInHand.containsEnchantment(smelterEnchantment)) return;
 
-            if ("dynamite".equals(effect)) {
-                snowball.getWorld().playSound(snowball.getLocation(), Sound.ENTITY_TNT_PRIMED, 1.0F, 1.0F);
+        event.getItems().forEach(dropped -> {
+            ItemStack original = dropped.getItemStack();
+            Material cookedMaterial = Utils.getCookedMaterial(original.getType());
 
-                ItemStack dynamiteItem = new ItemStack(Material.SNOWBALL);
-                ItemMeta meta = dynamiteItem.getItemMeta();
-                meta.setItemModel(new NamespacedKey("masworld","dynamite"));
-                dynamiteItem.setItemMeta(meta);
+            if (cookedMaterial != null) {
+                ItemStack cookedStack = new ItemStack(cookedMaterial, original.getAmount());
+                dropped.setItemStack(cookedStack);
 
-                ItemDisplay itemDisplay =  snowball.getWorld().spawn(snowball.getLocation(),ItemDisplay.class,d -> {
-                    d.setItemStack(dynamiteItem);
-                    d.setGravity(false);
-                    d.setInterpolationDuration(0);
-                    d.setBillboard(Display.Billboard.FIXED);
-                });
+                player.playSound(player.getLocation(), Sound.BLOCK_LAVA_EXTINGUISH, 1f, 1f);
+                dropped.getWorld().spawnParticle(Particle.FLAME, dropped.getLocation().getX(), dropped.getLocation().getY(), dropped.getLocation().getZ(), 10, 0, 0, 0, 0.05);
+            }
+        });
+    }
 
-                final int taskId = Bukkit.getScheduler().scheduleSyncRepeatingTask(this.weapons.main, () -> {
-                    Location currentLoc = snowball.getLocation();
-                    currentLoc.getWorld().spawnParticle(
-                            Particle.SMOKE,
-                            currentLoc,
-                            8,
-                            0.2, 0.2, 0.2,
-                            0.01           // speed
-                    );
+    @EventHandler
+    public void lavaInvincibility(EntityDamageEvent event) {
+        if (!(event.getEntity() instanceof Item item)) return;
 
-                    currentLoc.getWorld().spawnParticle(
-                            Particle.FLAME,
-                            currentLoc,
-                            8,
-                            0.2, 0.2, 0.2,
-                            0.01           // speed
-                    );
-                }, 0L, 5L);
+        NamespacedKey key = new NamespacedKey("masworld", "lava_invincibility");
+        Enchantment invincibilityEnchantment = RegistryAccess.registryAccess()
+                .getRegistry(RegistryKey.ENCHANTMENT)
+                .getOrThrow(key);
 
-                Bukkit.getScheduler().runTaskLater(this.weapons.main, () -> {
-                    if (!snowball.isDead()) {
-                        snowball.remove();
-                    }
-
-                    Bukkit.getScheduler().cancelTask(taskId);
-                    itemDisplay.remove();
-
-                    snowball.getWorld().createExplosion(snowball.getLocation(), power, true, true);
-                }, fuse);
+        if (item.getItemStack().containsEnchantment(invincibilityEnchantment)) {
+            if (event.getCause() == EntityDamageEvent.DamageCause.LAVA) {
+                event.setCancelled(true);
             }
         }
     }
 
     @EventHandler
-    public void sandStormBow(EntityShootBowEvent event) {
-        if (!(event.getEntity() instanceof Player player)) return;
+    public void cactusInvincibility(EntityDamageEvent event) {
+        if (!(event.getEntity() instanceof Item item)) return;
 
-        ItemStack bow = event.getBow();
-        if (bow == null) return;
+        NamespacedKey key = new NamespacedKey("masworld", "cactus_invincibility");
+        Enchantment invincibilityEnchantment = RegistryAccess.registryAccess()
+                .getRegistry(RegistryKey.ENCHANTMENT)
+                .getOrThrow(key);
 
-        NamespacedKey special_effectkey = new NamespacedKey(this.weapons.main, "special_effect");
+        if (item.getItemStack().containsEnchantment(invincibilityEnchantment)) {
+            if (event.getCause() == EntityDamageEvent.DamageCause.CONTACT) {
+                event.setCancelled(true);
+            }
+        }
+    }
 
-        String effect = bow.getPersistentDataContainer().get(special_effectkey, PersistentDataType.STRING);
-        if (effect != null && effect.equalsIgnoreCase("sandstorm_bow")) {
-            Bukkit.getScheduler().runTaskLater(this.weapons.main, () -> {
-                if (event.getProjectile() instanceof Arrow originalArrow) {
-                    float force = event.getForce();
-                    Vector direction = player.getEyeLocation().getDirection().normalize();
+    @EventHandler
+    public void explosionInvincibility(EntityDamageEvent event) {
+        if (!(event.getEntity() instanceof Item item)) return;
 
-                    Arrow extraArrow = player.getWorld().spawn(player.getEyeLocation(), Arrow.class);
+        NamespacedKey key = new NamespacedKey("masworld", "explosion_invincibility");
+        Enchantment invincibilityEnchantment = RegistryAccess.registryAccess()
+                .getRegistry(RegistryKey.ENCHANTMENT)
+                .getOrThrow(key);
 
-                    extraArrow.setVelocity(direction.multiply(force * 3));
-                    extraArrow.setShooter(player);
-                    extraArrow.setCritical(originalArrow.isCritical());
-                    extraArrow.setPickupStatus(originalArrow.getPickupStatus());
-                }
-            }, 10L);
+        if (item.getItemStack().containsEnchantment(invincibilityEnchantment)) {
+            if (event.getCause() == EntityDamageEvent.DamageCause.BLOCK_EXPLOSION || event.getCause() == EntityDamageEvent.DamageCause.ENTITY_EXPLOSION) {
+                event.setCancelled(true);
+            }
         }
     }
 }

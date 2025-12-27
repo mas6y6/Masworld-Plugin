@@ -1,8 +1,10 @@
 package com.mas6y6.masworld;
+import com.mas6y6.masworld.Commands.PersonalVault.PersonalVault;
+import com.mas6y6.masworld.Commands.XPBottler;
 import com.mas6y6.masworld.Economy.MasEconomy;
 import com.mas6y6.masworld.ItemEffects.ItemEffects;
 import com.mas6y6.masworld.Objects.TextSymbols;
-import com.mas6y6.masworld.Weapons.Weapons;
+import com.mas6y6.masworld.Items.Items;
 import com.mas6y6.masworld.Chat.Chat;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
@@ -14,18 +16,18 @@ import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.configuration.Configuration;
 import java.io.File;
-import java.util.ArrayList;
-import com.mas6y6.masworld.Weapons.Attributes.Utils.SetWeaponDamage;
+import com.mas6y6.masworld.Items.Attributes.Utils.SetWeaponDamage;
 import static net.kyori.adventure.text.format.NamedTextColor.*;
 
 public final class Masworld extends JavaPlugin {
 
     public Configuration config;
     public ItemEffects itemeffects;
-    public ArrayList<JavaPlugin> subplugins;
     public MasEconomy maseconomy;
-    public Weapons weapons;
+    public Items weapons;
     public Chat chat;
+    public XPBottler xpBottler;
+    public PersonalVault personalVault;
 
     @Override
     public void onEnable() {
@@ -61,8 +63,11 @@ public final class Masworld extends JavaPlugin {
 
         this.maseconomy = new MasEconomy(this);
 
-        this.weapons = new Weapons(this);
+        this.weapons = new Items(this);
         this.chat = new Chat(this);
+
+        this.xpBottler = new XPBottler(this);
+        this.personalVault = new PersonalVault(this);
 
         this.getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, commands -> {
             LiteralArgumentBuilder<CommandSourceStack> root = Commands.literal("masworld");
@@ -74,7 +79,9 @@ public final class Masworld extends JavaPlugin {
             root.then(weapons.buildCommands());
 
             commands.registrar().register(root.build());
+
             commands.registrar().register(weapons.buildAdminStickCMD().build());
+            commands.registrar().register(this.xpBottler.cmd.build());
         });
 
         getLogger().info("Registered Commands");
@@ -86,6 +93,8 @@ public final class Masworld extends JavaPlugin {
                 }
             }
         }, 0L,20L);
+
+        getServer().getPluginManager().registerEvents(new EventsListener(this), this);
     }
 
     @Override
@@ -127,5 +136,9 @@ public final class Masworld extends JavaPlugin {
             }
         }
         getLogger().info("Reload Complete");
+    }
+
+    public MasEconomy getEconomy() {
+        return this.maseconomy;
     }
 }

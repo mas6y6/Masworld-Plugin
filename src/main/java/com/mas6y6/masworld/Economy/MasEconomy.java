@@ -20,8 +20,6 @@ public class MasEconomy {
         }
 
         econ = rsp.getProvider();
-
-
     }
 
     public net.milkbowl.vault.economy.Economy getEconomy() {
@@ -29,8 +27,6 @@ public class MasEconomy {
     }
 
     public LiteralArgumentBuilder<CommandSourceStack> buildCommands() {
-
-
         return commands;
     }
 }

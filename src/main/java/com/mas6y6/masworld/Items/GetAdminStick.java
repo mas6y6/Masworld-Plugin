@@ -1,4 +1,4 @@
-package com.mas6y6.masworld.Weapons;
+package com.mas6y6.masworld.Items;
 
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.ItemType;
@@ -6,7 +6,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.enchantments.Enchantment;
 import java.lang.*;
 
-import com.mas6y6.masworld.Weapons.Attributes.Utils.SetWeaponDamage;
+import com.mas6y6.masworld.Items.Attributes.Utils.SetWeaponDamage;
 
 public class GetAdminStick {
     public ItemStack adminStick() {
