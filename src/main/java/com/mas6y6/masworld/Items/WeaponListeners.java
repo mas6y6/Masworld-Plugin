@@ -2,11 +2,17 @@ package com.mas6y6.masworld.Items;
 
 import com.mas6y6.masworld.Masworld;
 import com.mas6y6.masworld.Objects.TextSymbols;
+import com.mas6y6.masworld.Objects.Utils;
 import de.tr7zw.nbtapi.NBT;
+import de.tr7zw.nbtapi.NBTEntity;
 import de.tr7zw.nbtapi.iface.ReadWriteNBT;
+import io.papermc.paper.registry.RegistryAccess;
+import io.papermc.paper.registry.RegistryKey;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.TextDecoration;
+import net.momirealms.craftengine.bukkit.api.CraftEngineItems;
 import net.momirealms.craftengine.libraries.nbt.CompoundTag;
 import org.bukkit.*;
 import org.bukkit.block.Block;
@@ -606,6 +612,12 @@ public class WeaponListeners implements Listener {
 
         if (!event.getAction().name().contains("RIGHT_CLICK")) return;
 
+        if (!(player.getCooldown(Key.key("masworld", "void_beam")) == 0)) {
+            player.sendMessage(TextSymbols.error("Under Cooldown!"));
+            player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 1.0F, 1.0F);
+            return;
+        }
+
         // Get the block player is looking at within 50 blocks
         Block targetBlock = player.getTargetBlockExact(50);
         if (targetBlock == null) {
@@ -702,6 +714,7 @@ public class WeaponListeners implements Listener {
         }.runTaskTimer(this.weapons.main, 0L, 1L);
     }
 
+    /*
     @EventHandler
     public void entityStringTest(PlayerToggleSneakEvent event) {
         Player player = event.getPlayer();
@@ -722,7 +735,252 @@ public class WeaponListeners implements Listener {
         nbt.removeKey("Velocity");
 
         player.sendMessage(nbt.toString());
+    }*/
 
+    @EventHandler
+    public void enderpholicSword(PlayerInteractEvent event) {
+        Player player = event.getPlayer();
+        ItemStack item = event.getItem();
+        if (item == null) return;
 
+        ItemMeta meta = item.getItemMeta();
+        if (meta == null) return;
+
+        NamespacedKey specialEffectKey = new NamespacedKey(this.weapons.main, "special_effect");
+        PersistentDataContainer container = meta.getPersistentDataContainer();
+
+        if (!"enderpholic_sword".equals(container.get(specialEffectKey, PersistentDataType.STRING))) return;
+
+        if (!event.getAction().name().contains("RIGHT_CLICK")) return;
+
+        if (!(player.getCooldown(Key.key("masworld", "enderpholic_sword")) == 0)) {
+            player.sendMessage(TextSymbols.error("Under Cooldown!"));
+            player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 1.0F, 1.0F);
+            return;
+        }
+
+        Location loc = player.getLocation();
+        Vector direction = loc.getDirection().normalize();
+        loc.add(direction.multiply(4));
+        if (!(loc.getBlock().getType() == Material.AIR)) {
+            player.sendMessage(TextSymbols.error("Cannot teleport! Obstruction detected!"));
+            player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 1.0F, 1.0F);
+            return;
+        }
+
+        player.getWorld().spawnParticle(
+                Particle.PORTAL,
+                loc.getX(), loc.getY(), loc.getZ(),
+                20,
+                0.4, 0.5, 0.4,
+                0.4
+        );
+
+        player.getWorld().playSound(loc,Sound.ENTITY_PLAYER_TELEPORT,1,1);
+
+        player.teleport(loc);
+
+        player.setCooldown(Key.key("masworld", "enderpholic_sword"), 200);
     }
+
+    public EnumSet<EntityType> BLACKLIST_VOID_BUNDLE = EnumSet.of(
+        EntityType.RAVAGER
+    );
+
+    @EventHandler
+    public void void_bundle(PlayerInteractEvent event) {
+        Player player = event.getPlayer();
+        ItemStack item = event.getItem();
+        if (item == null) return;
+
+        ItemMeta meta = item.getItemMeta();
+        if (meta == null) return;
+
+        NamespacedKey specialEffectKey = new NamespacedKey(this.weapons.main, "special_effect");
+        PersistentDataContainer container = meta.getPersistentDataContainer();
+
+        if (!"void_bundle".equals(container.get(specialEffectKey, PersistentDataType.STRING))) return;
+
+        if (!(player.getCooldown(Key.key("masworld", "void_bundle")) == 0)) {
+            player.sendMessage(TextSymbols.error("Under Cooldown!"));
+            player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 1.0F, 1.0F);
+            return;
+        }
+
+        event.setCancelled(true);
+
+        NamespacedKey storedkey = new NamespacedKey(this.weapons.main, "void_bundle_entity");
+
+        if (event.getAction().name().contains("RIGHT_CLICK")) {
+            if (!Objects.equals(item.getPersistentDataContainer().get(storedkey, PersistentDataType.STRING), "")) {
+                player.sendMessage(TextSymbols.error("This void bundle already contains an entity!"));
+                player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 1.0F, 1.0F);
+                return;
+            }
+
+            Entity target = player.getTargetEntity(10);
+
+            if (target == null) {
+                player.sendMessage(TextSymbols.error("Your not looking at a entity!"));
+                player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 1.0F, 1.0F);
+                return;
+            };
+
+            if (!(target instanceof LivingEntity living)
+                    || living instanceof Player
+                    || living instanceof Boss
+                    || living.getType() == EntityType.ARMOR_STAND
+                    || BLACKLIST_VOID_BUNDLE.contains(target.getType())) {
+
+                player.sendMessage(TextSymbols.error("Cannot store this mob!"));
+                player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 1.0F, 1.0F);
+                return;
+            }
+
+            ReadWriteNBT nbt = NBT.parseNBT(Objects.requireNonNull(target.getAsString()));
+            nbt.removeKey("Paper.Origin");
+            nbt.removeKey("Paper.OriginWorld");
+            nbt.removeKey("Rotation");
+            nbt.removeKey("Motion");
+            nbt.removeKey("FallFlying");
+            nbt.removeKey("OnGround");
+            nbt.removeKey("FallDistance");
+            nbt.removeKey("PortalCooldown");
+            nbt.removeKey("Velocity");
+
+            ItemMeta new_meta = item.getItemMeta();
+            if (new_meta == null) return;
+
+            List<Component> lore = meta.lore();
+            if (lore == null) lore = new ArrayList<>();
+
+            String entityName = target.getName() + " (" + target.getType().getKey() + ")";
+
+            lore.set(7, Component.text(entityName, NamedTextColor.GRAY));
+            new_meta.lore(lore);
+
+            item.setItemMeta(new_meta);
+
+            item.editPersistentDataContainer(pdc -> {
+                pdc.set(storedkey, PersistentDataType.STRING, nbt.toString());
+            });
+
+            target.getWorld().spawnParticle(Particle.TRIAL_SPAWNER_DETECTION_OMINOUS,
+                target.getX(),target.getY(),target.getZ(),
+                30,
+                0.3,0.5,0.3,
+                0.01
+            );
+
+            target.getWorld().playSound(target.getLocation(),Sound.ENTITY_ENDER_EYE_DEATH,1,1);
+            target.getWorld().playSound(target.getLocation(),Sound.ITEM_BUNDLE_INSERT,1,1);
+
+            target.remove();
+
+            player.setCooldown(Key.key("masworld", "void_bundle"), 80);
+        } else if (event.getAction().name().contains("LEFT_CLICK")) {
+            if (Objects.equals(item.getPersistentDataContainer().get(storedkey, PersistentDataType.STRING), "")) {
+                player.sendMessage(TextSymbols.error("This void bundle doesnt contain a entity!"));
+                player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 1.0F, 1.0F);
+                return;
+            }
+
+            ReadWriteNBT nbt = NBT.parseNBT(Objects.requireNonNull(item.getPersistentDataContainer().get(storedkey,PersistentDataType.STRING)));
+
+            EntityType type = RegistryAccess.registryAccess().getRegistry(RegistryKey.ENTITY_TYPE).get(Utils.parseNamespacedKey(nbt.getString("id")));
+
+            assert type != null;
+
+            Block targetBlock = player.getTargetBlockExact(10);
+            if (targetBlock == null) {
+                player.sendMessage(TextSymbols.error("You need to be pointing at a block to release your stored entity!"));
+                player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 1.0F, 1.0F);
+                return;
+            }
+
+            Block current = targetBlock;
+            Block airBlock = null;
+
+            for (int i = 0; i < 5; i++) {
+                current = current.getRelative(BlockFace.UP);
+
+                if (current.getType().isAir()) {
+                    airBlock = current;
+                    break;
+                }
+            }
+
+            if (airBlock == null) {
+                player.sendMessage(TextSymbols.error("No space above the block!"));
+                player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 1.0F, 1.0F);
+                return;
+            }
+
+            Entity entity = player.getWorld().spawnEntity(airBlock.getLocation(),type);
+
+            NBT.modify(entity, entity_nbt -> {
+                entity_nbt.mergeCompound(nbt);
+            });
+
+            entity.getWorld().spawnParticle(Particle.TRIAL_SPAWNER_DETECTION,
+                    entity.getX(),entity.getY(),entity.getZ(),
+                    30,
+                    0.3,0.5,0.3,
+                    0.01
+            );
+
+            entity.getWorld().playSound(entity.getLocation(),Sound.ENTITY_ENDER_EYE_DEATH,1,1);
+            entity.getWorld().playSound(entity.getLocation(),Sound.ITEM_BUNDLE_INSERT,1,1);
+
+            ItemMeta new_meta = item.getItemMeta();
+            if (new_meta == null) return;
+
+            List<Component> lore = meta.lore();
+            if (lore == null) lore = new ArrayList<>();
+
+            lore.set(7, Component.text("Nothing", NamedTextColor.GRAY));
+            new_meta.lore(lore);
+
+            item.setItemMeta(new_meta);
+
+            item.editPersistentDataContainer(pdc -> {
+                pdc.set(storedkey, PersistentDataType.STRING, "");
+            });
+
+            player.setCooldown(Key.key("masworld", "void_bundle"), 80);
+        }
+    }
+
+    @EventHandler
+    public void collectVoidBottle(PlayerInteractEvent event) {
+        Action action = event.getAction();
+        if (action != Action.RIGHT_CLICK_AIR && action != Action.RIGHT_CLICK_BLOCK) return;
+        Player player = event.getPlayer();
+        if (player.getWorld().getEnvironment() != World.Environment.THE_END) return;
+        ItemStack handItem = player.getInventory().getItemInMainHand();
+        if (handItem.getType() != Material.GLASS_BOTTLE) return;
+        if (player.getLocation().getBlockY() > 20) return;
+
+        event.setCancelled(true);
+
+        ItemStack voidBottle = CraftEngineItems
+                .byId(net.momirealms.craftengine.core.util.Key.of("masworldce", "void_bottle"))
+                .buildItemStack()
+                .clone();
+
+        if (handItem.getAmount() == 1) {
+            player.getInventory().setItemInMainHand(voidBottle);
+        } else {
+            handItem.setAmount(handItem.getAmount() - 1);
+
+            HashMap<Integer, ItemStack> leftover = player.getInventory().addItem(voidBottle);
+            if (!leftover.isEmpty()) {
+                player.getWorld().dropItemNaturally(player.getLocation(), voidBottle);
+            }
+        }
+
+        player.playSound(player.getLocation(), Sound.ENTITY_ENDER_EYE_DEATH, 1f, 1f);
+        player.playSound(player.getLocation(), Sound.ITEM_BOTTLE_FILL, 1f, 1f);
+    }
+
 }
