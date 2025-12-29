@@ -21,6 +21,7 @@ import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.inventory.InventoryOpenEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerItemHeldEvent;
 import org.bukkit.event.world.LootGenerateEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
@@ -29,6 +30,12 @@ import org.bukkit.loot.LootTable;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.Nullable;
+import com.mas6y6.masworld.Items.GetAdminStick.GetAdminStick;
+import org.bukkit.persistence.PersistentDataContainer;
+import org.bukkit.persistence.PersistentDataType;
+import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.attribute.AttributeInstance;
+import org.bukkit.attribute.Attribute;
 
 import java.util.List;
 import java.util.Objects;
@@ -72,4 +79,20 @@ public class EventsListener implements Listener {
             loot.set(i, newItem);
         }
     }
+    /*
+    @EventHandler
+    public void onAdminStickEquipped(PlayerItemHeldEvent event) {
+        Player player = event.getPlayer();
+        ItemStack adminstick = GetAdminStick.adminStick();
+        ItemStack hand = player.getInventory().getItemInMainHand();
+        ItemMeta handIM = hand.getItemMeta();
+        NamespacedKey key = new NamespacedKey("masworld", "adminstick_id");
+        PersistentDataContainer handIM_PDC = handIM.getPersistentDataContainer();
+        if (hand != null &&  hand.getType() != Material.AIR) {
+            if (hand.getType() == adminstick.getType() && handIM_PDC.has(key, PersistentDataType.STRING)) {
+                handIM.setAttackRange();
+            }
+        }
+    }
+    */
 }
