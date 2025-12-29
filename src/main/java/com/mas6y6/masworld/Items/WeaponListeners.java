@@ -13,17 +13,22 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
 import net.momirealms.craftengine.bukkit.api.CraftEngineItems;
+import net.momirealms.craftengine.bukkit.plugin.gui.CraftEngineGUIHolder;
+import net.momirealms.craftengine.core.plugin.CraftEngine;
 import net.momirealms.craftengine.libraries.nbt.CompoundTag;
 import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.entity.EntityShootBowEvent;
 import org.bukkit.event.entity.ProjectileHitEvent;
 import org.bukkit.event.entity.ProjectileLaunchEvent;
+import org.bukkit.event.player.PlayerInteractAtEntityEvent;
+import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerToggleSneakEvent;
 import org.bukkit.inventory.ItemStack;
@@ -787,7 +792,47 @@ public class WeaponListeners implements Listener {
         EntityType.RAVAGER
     );
 
-    @EventHandler
+    @EventHandler(priority = EventPriority.HIGHEST)
+    public void void_bundle_entity_override(PlayerInteractEntityEvent event) {
+        Player player = event.getPlayer();
+        ItemStack item = event.getPlayer().getInventory().getItemInMainHand();
+
+        ItemMeta meta = item.getItemMeta();
+        if (meta == null) return;
+
+        NamespacedKey specialEffectKey = new NamespacedKey(this.weapons.main, "special_effect");
+        PersistentDataContainer container = meta.getPersistentDataContainer();
+
+        if (!"void_bundle".equals(container.get(specialEffectKey, PersistentDataType.STRING))) return;
+
+        if (!(player.getCooldown(Key.key("masworld", "void_bundle")) == 0)) {
+            return;
+        }
+
+        event.setCancelled(true);
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST)
+    public void void_bundle_at_entity_override(PlayerInteractAtEntityEvent event) {
+        Player player = event.getPlayer();
+        ItemStack item = event.getPlayer().getInventory().getItemInMainHand();
+
+        ItemMeta meta = item.getItemMeta();
+        if (meta == null) return;
+
+        NamespacedKey specialEffectKey = new NamespacedKey(this.weapons.main, "special_effect");
+        PersistentDataContainer container = meta.getPersistentDataContainer();
+
+        if (!"void_bundle".equals(container.get(specialEffectKey, PersistentDataType.STRING))) return;
+
+        if (!(player.getCooldown(Key.key("masworld", "void_bundle")) == 0)) {
+            return;
+        }
+
+        event.setCancelled(true);
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST)
     public void void_bundle(PlayerInteractEvent event) {
         Player player = event.getPlayer();
         ItemStack item = event.getItem();
@@ -818,7 +863,7 @@ public class WeaponListeners implements Listener {
                 return;
             }
 
-            Entity target = player.getTargetEntity(10);
+            Entity target = player.getTargetEntity(5);
 
             if (target == null) {
                 player.sendMessage(TextSymbols.error("Your not looking at a entity!"));
@@ -891,7 +936,7 @@ public class WeaponListeners implements Listener {
 
             assert type != null;
 
-            Block targetBlock = player.getTargetBlockExact(10);
+            Block targetBlock = player.getTargetBlockExact(5);
             if (targetBlock == null) {
                 player.sendMessage(TextSymbols.error("You need to be pointing at a block to release your stored entity!"));
                 player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 1.0F, 1.0F);
@@ -982,5 +1027,4 @@ public class WeaponListeners implements Listener {
         player.playSound(player.getLocation(), Sound.ENTITY_ENDER_EYE_DEATH, 1f, 1f);
         player.playSound(player.getLocation(), Sound.ITEM_BOTTLE_FILL, 1f, 1f);
     }
-
 }
