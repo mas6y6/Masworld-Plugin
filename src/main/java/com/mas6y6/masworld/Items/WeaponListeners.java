@@ -1,11 +1,14 @@
 package com.mas6y6.masworld.Items;
 
+import com.destroystokyo.paper.event.player.PlayerLaunchProjectileEvent;
 import com.mas6y6.masworld.Masworld;
 import com.mas6y6.masworld.Objects.TextSymbols;
 import com.mas6y6.masworld.Objects.Utils;
 import de.tr7zw.nbtapi.NBT;
+import de.tr7zw.nbtapi.NBTCompound;
 import de.tr7zw.nbtapi.NBTEntity;
 import de.tr7zw.nbtapi.iface.ReadWriteNBT;
+import io.papermc.paper.persistence.PersistentDataContainerView;
 import io.papermc.paper.registry.RegistryAccess;
 import io.papermc.paper.registry.RegistryKey;
 import net.kyori.adventure.key.Key;
@@ -19,6 +22,7 @@ import net.momirealms.craftengine.libraries.nbt.CompoundTag;
 import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
+import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -36,6 +40,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
+import org.bukkit.projectiles.ProjectileSource;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Vector;
 
@@ -48,28 +53,53 @@ public class WeaponListeners implements Listener {
         this.weapons = weapons;
     }
 
-    public static long getLongPDC(PersistentDataContainer container, NamespacedKey key) {
+    public static long getLongPDC(PersistentDataContainerView container, NamespacedKey key) {
+        if (container == null) return 0L;
+
         try {
-            Long fuseLong = container.get(key, PersistentDataType.LONG);
-            if (fuseLong != null) return fuseLong;
+            Integer intVal = container.get(key, PersistentDataType.INTEGER);
+            if (intVal != null) return intVal.longValue();
         } catch (IllegalArgumentException ignored) {}
 
         try {
-            Integer fuseInt = container.get(key, PersistentDataType.INTEGER);
-            if (fuseInt != null) return fuseInt.longValue();
+            Long longVal = container.get(key, PersistentDataType.LONG);
+            if (longVal != null) return longVal;
         } catch (IllegalArgumentException ignored) {}
+
+        try {
+            Float floatVal = container.get(key, PersistentDataType.FLOAT);
+            if (floatVal != null) return floatVal.longValue();
+        } catch (IllegalArgumentException ignored) {}
+
+        try {
+            Double doubleVal = container.get(key, PersistentDataType.DOUBLE);
+            if (doubleVal != null) return doubleVal.longValue();
+        } catch (IllegalArgumentException ignored) {}
+
         return 0L;
     }
 
-    public static float getFloatPDC(PersistentDataContainer container, NamespacedKey key) {
+    public static float getFloatPDC(PersistentDataContainerView container, NamespacedKey key) {
+        if (container == null) return 0f;
+
         try {
-            Double valueDouble = container.get(key, PersistentDataType.DOUBLE);
-            if (valueDouble != null) return valueDouble.floatValue();
+            Float floatVal = container.get(key, PersistentDataType.FLOAT);
+            if (floatVal != null) return floatVal;
         } catch (IllegalArgumentException ignored) {}
 
         try {
-            Float valueFloat = container.get(key, PersistentDataType.FLOAT);
-            if (valueFloat != null) return valueFloat;
+            Double doubleVal = container.get(key, PersistentDataType.DOUBLE);
+            if (doubleVal != null) return doubleVal.floatValue();
+        } catch (IllegalArgumentException ignored) {}
+
+        try {
+            Integer intVal = container.get(key, PersistentDataType.INTEGER);
+            if (intVal != null) return intVal.floatValue();
+        } catch (IllegalArgumentException ignored) {}
+
+        try {
+            Long longVal = container.get(key, PersistentDataType.LONG);
+            if (longVal != null) return longVal.floatValue();
         } catch (IllegalArgumentException ignored) {}
 
         return 0f;
@@ -1005,5 +1035,53 @@ public class WeaponListeners implements Listener {
 
         player.playSound(player.getLocation(), Sound.ENTITY_ENDER_EYE_DEATH, 1f, 1f);
         player.playSound(player.getLocation(), Sound.ITEM_BOTTLE_FILL, 1f, 1f);
+    }
+
+    @EventHandler
+    public void crossbowDynamite(PlayerLaunchProjectileEvent event) {
+        Player player = event.getPlayer();
+
+        NamespacedKey special_effect = new NamespacedKey(this.weapons.main, "special_effect");
+        NamespacedKey fusekey = new NamespacedKey(this.weapons.main, "dynamite_fuse");
+        NamespacedKey powerkey = new NamespacedKey(this.weapons.main, "dynamite_power");
+
+        ItemStack mainHand = player.getInventory().getItemInMainHand();
+        ItemStack offHand = player.getInventory().getItemInOffHand();
+
+        if (!Objects.equals(offHand.getPersistentDataContainer().get(special_effect, PersistentDataType.STRING), "dynamite"))
+            return;
+
+        Long fuse = getLongPDC(offHand.getPersistentDataContainer(), fusekey);
+        Float power = getFloatPDC(offHand.getPersistentDataContainer(), powerkey);
+
+        Projectile oldProj = event.getProjectile();
+        if (!(oldProj instanceof Arrow arrow)) return;
+
+        Location loc = arrow.getLocation();
+        Vector vel = arrow.getVelocity();
+        ProjectileSource shooter = arrow.getShooter();
+
+        int knockback = 0;
+        if (mainHand.getType() == Material.CROSSBOW || mainHand.getType() == Material.BOW) {
+            knockback = mainHand.getEnchantmentLevel(Enchantment.KNOCKBACK);
+        }
+
+        arrow.remove();
+
+        Snowball snowball = arrow.getWorld().spawn(loc, Snowball.class);
+        snowball.setShooter(shooter);
+        snowball.setVelocity(vel);
+        PersistentDataContainer pdc = snowball.getPersistentDataContainer();
+        pdc.set(special_effect,PersistentDataType.STRING,"dynamite");
+        pdc.set(fusekey,PersistentDataType.LONG,fuse);
+        pdc.set(powerkey,PersistentDataType.FLOAT,power);
+
+        NBT.modify(snowball,n -> {
+            ReadWriteNBT item = n.getCompound("Item");
+            item.setString("minecraft:item_model","masworld:dynamite");
+        });
+
+        offHand.setAmount(offHand.getAmount() - 1);
+        if (offHand.getAmount() <= 0) player.getInventory().setItemInOffHand(null);
     }
 }
