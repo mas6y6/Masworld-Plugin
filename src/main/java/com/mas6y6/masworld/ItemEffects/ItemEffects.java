@@ -132,8 +132,7 @@ public class ItemEffects {
         return pdc.get(key, PersistentDataType.STRING);
     }
 
-
-    public List<EffectData> calculateEffects(Player player) {
+    public List<EffectRegister> getActiveEffectRegisters(Player player) {
         PlayerInventory inventory = player.getInventory();
 
         Map<String, ItemStack> slotItems = Map.of(
@@ -161,6 +160,43 @@ public class ItemEffects {
                         .map(Utils::normalizeDimensionName)
                         .collect(Collectors.toSet())
                         .contains(Utils.normalizeDimensionName(player.getWorld().getName()))) return null;
+
+                return reg;
+            }).toList();
+    }
+
+    public List<EffectData> calculateEffects(Player player) {
+        PlayerInventory inventory = player.getInventory();
+
+        Map<String, ItemStack> slotItems = Map.of(
+                "helmet", inventory.getHelmet(),
+                "chestplate", inventory.getChestplate(),
+                "leggings", inventory.getLeggings(),
+                "boots", inventory.getBoots(),
+                "mainhand", inventory.getItemInMainHand(),
+                "offhand", inventory.getItemInOffHand()
+        );
+
+
+
+        return slotItems.entrySet().stream()
+            .filter(entry -> entry.getValue() != null && entry.getValue().getType() != Material.AIR) // skip empty/null
+            .map(entry -> {
+                String slotName = entry.getKey();
+                String effectId = getEffectIdAsString(entry.getValue());
+                if (effectId == null) return null;
+
+                EffectRegister reg = getEffect(effectId);
+                if (reg == null || reg.isDisabled()) return null;
+
+                if (!reg.getSlots().contains(slotName.toLowerCase())) return null;
+                if (reg.isOnlySneaking() && !player.isSneaking()) return null;
+                if (!reg.getDimensions().stream()
+                        .map(Utils::normalizeDimensionName)
+                        .collect(Collectors.toSet())
+                        .contains(Utils.normalizeDimensionName(player.getWorld().getName()))) return null;
+
+
 
                 return reg.effects.values(); // Collection<EffectObject>
             })
@@ -456,6 +492,8 @@ public class ItemEffects {
         PersistentDataContainer pdc = player.getPersistentDataContainer();
 
         List<EffectData> applylist = this.calculateEffects(player);
+
+
 
         NamespacedKey itemeffectskey = new NamespacedKey(this.main, "masworld_itemapplied_effects");
 

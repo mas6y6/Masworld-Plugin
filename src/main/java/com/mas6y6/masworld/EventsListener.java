@@ -9,23 +9,29 @@ import net.momirealms.craftengine.core.item.CustomItem;
 import net.momirealms.craftengine.core.util.Key;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
+import org.bukkit.block.Barrel;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockState;
 import org.bukkit.block.Chest;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.inventory.InventoryOpenEvent;
+import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.world.LootGenerateEvent;
 import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.loot.LootTable;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
+import java.util.Objects;
 
 public class EventsListener implements Listener {
     public Masworld masworld;
@@ -34,29 +40,36 @@ public class EventsListener implements Listener {
         this.masworld = plugin;
     }
 
+    private final NamespacedKey cekey = new NamespacedKey("masworld", "ce_item");
+    private final NamespacedKey countKey = new NamespacedKey("masworld", "item_count");
+
     @EventHandler
     public void onLootGenerate(LootGenerateEvent event) {
-        if (!(event.getInventoryHolder() instanceof BlockState)) return;
+        InventoryHolder holder = event.getInventoryHolder();
+        if (!(holder instanceof Chest || holder instanceof Barrel)) return;
 
-        List<ItemStack> loot = event.getLoot();
-
-        NamespacedKey key = new NamespacedKey("masworld", "loottable_id");
-
+        List<ItemStack> loot = event.getLoot(); // get the loot list
         for (int i = 0; i < loot.size(); i++) {
             ItemStack item = loot.get(i);
             if (item == null) continue;
-            if (item.getType() != Material.KNOWLEDGE_BOOK) continue;
 
-            String id = item.getPersistentDataContainer().get(key, PersistentDataType.STRING);
+            String id = item.getPersistentDataContainer().get(cekey, PersistentDataType.STRING);
+            int itemCount = item.getPersistentDataContainer()
+                    .getOrDefault(countKey, PersistentDataType.BYTE, (byte) 1);
+            if (id == null) continue;
 
-            if (id != null) {
-                CustomItem<ItemStack> customItem = CraftEngineItems.byId(
-                        CraftEngineUtils.generateKey("masworldce", id)
-                );
+            String[] idParts = id.split(":");
+            if (idParts.length != 2) continue;
 
-                assert customItem != null;
-                loot.set(i, customItem.buildItemStack());
-            }
+            CustomItem<ItemStack> customItem = CraftEngineItems.byId(
+                    CraftEngineUtils.generateKey(idParts[0], idParts[1])
+            );
+            if (customItem == null) continue;
+
+            ItemStack newItem = customItem.buildItemStack();
+            newItem.setAmount(itemCount);
+
+            loot.set(i, newItem);
         }
     }
 }

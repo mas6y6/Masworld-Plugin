@@ -38,18 +38,18 @@ public class TextSymbols {
     }
 
     public static Component error(String text) {
-        return WARNING.append(Component.text(text).color(NamedTextColor.RED));
+        return ERROR.append(Component.text(text).color(NamedTextColor.RED));
     }
 
     public static Component question(String text) {
-        return WARNING.append(Component.text(text).color(NamedTextColor.LIGHT_PURPLE));
+        return QUESTION.append(Component.text(text).color(NamedTextColor.LIGHT_PURPLE));
     }
 
     public static Component info(String text) {
-        return WARNING.append(Component.text(text).color(NamedTextColor.WHITE));
+        return INFO.append(Component.text(text).color(NamedTextColor.WHITE));
     }
 
     public static Component success(String text) {
-        return WARNING.append(Component.text(text).color(NamedTextColor.GREEN));
+        return SUCCESS.append(Component.text(text).color(NamedTextColor.GREEN));
     }
 }
