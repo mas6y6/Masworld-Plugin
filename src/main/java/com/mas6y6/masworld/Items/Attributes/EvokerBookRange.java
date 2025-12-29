@@ -27,7 +27,7 @@ public class EvokerBookRange{
             source.getSender().sendMessage(TextSymbols.ERROR.append(Component.text("You must be a Player!").color(NamedTextColor.WHITE)));
             return 0;
         } else {
-            if (!(player.hasPermission("masworld.itemeffects.editor"))) {
+            if (!(player.hasPermission("masworld.admin"))) {
                 player.sendMessage(TextSymbols.ERROR.append(Component.text("You don't have the permission to run this command!").color(NamedTextColor.RED)));
                 return 0;
             }
@@ -51,7 +51,7 @@ public class EvokerBookRange{
             source.getSender().sendMessage(TextSymbols.ERROR.append(Component.text("You must be a Player!").color(NamedTextColor.WHITE)));
             return 0;
         } else {
-            if (!(player.hasPermission("masworld.itemeffects.editor"))) {
+            if (!(player.hasPermission("masworld.admin"))) {
                 player.sendMessage(TextSymbols.ERROR.append(Component.text("You don't have the permission to run this command!").color(NamedTextColor.RED)));
                 return 0;
             }
@@ -75,7 +75,7 @@ public class EvokerBookRange{
             source.getSender().sendMessage(TextSymbols.ERROR.append(Component.text("You must be a Player!").color(NamedTextColor.WHITE)));
             return 0;
         } else {
-            if (!(player.hasPermission("masworld.itemeffects.editor"))) {
+            if (!(player.hasPermission("masworld.admin"))) {
                 player.sendMessage(TextSymbols.ERROR.append(Component.text("You don't have the permission to run this command!").color(NamedTextColor.RED)));
                 return 0;
             }

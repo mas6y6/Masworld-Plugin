@@ -31,6 +31,7 @@ import org.bukkit.event.player.PlayerInteractAtEntityEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerToggleSneakEvent;
+import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataContainer;
@@ -792,208 +793,186 @@ public class WeaponListeners implements Listener {
         EntityType.RAVAGER
     );
 
-    @EventHandler(priority = EventPriority.HIGHEST)
-    public void void_bundle_entity_override(PlayerInteractEntityEvent event) {
-        Player player = event.getPlayer();
-        ItemStack item = event.getPlayer().getInventory().getItemInMainHand();
-
+    private boolean isVoidBundle(ItemStack item) {
+        if (item == null || item.getType().isAir()) return false;
         ItemMeta meta = item.getItemMeta();
-        if (meta == null) return;
+        if (meta == null) return false;
 
-        NamespacedKey specialEffectKey = new NamespacedKey(this.weapons.main, "special_effect");
-        PersistentDataContainer container = meta.getPersistentDataContainer();
-
-        if (!"void_bundle".equals(container.get(specialEffectKey, PersistentDataType.STRING))) return;
-
-        if (!(player.getCooldown(Key.key("masworld", "void_bundle")) == 0)) {
-            return;
-        }
-
-        event.setCancelled(true);
+        NamespacedKey key = new NamespacedKey(this.weapons.main, "special_effect");
+        return "void_bundle".equals(
+                meta.getPersistentDataContainer().get(key, PersistentDataType.STRING)
+        );
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)
-    public void void_bundle_at_entity_override(PlayerInteractAtEntityEvent event) {
+    public void onEntityCapture(PlayerInteractEntityEvent event) {
+        if (event.getHand() != EquipmentSlot.HAND) return;
+
         Player player = event.getPlayer();
-        ItemStack item = event.getPlayer().getInventory().getItemInMainHand();
+        ItemStack item = player.getInventory().getItemInMainHand();
+        if (!isVoidBundle(item)) return;
 
-        ItemMeta meta = item.getItemMeta();
-        if (meta == null) return;
+        event.setCancelled(true);
 
-        NamespacedKey specialEffectKey = new NamespacedKey(this.weapons.main, "special_effect");
-        PersistentDataContainer container = meta.getPersistentDataContainer();
-
-        if (!"void_bundle".equals(container.get(specialEffectKey, PersistentDataType.STRING))) return;
-
-        if (!(player.getCooldown(Key.key("masworld", "void_bundle")) == 0)) {
+        if (player.getCooldown(Key.key("masworld", "void_bundle")) != 0) {
+            player.sendMessage(TextSymbols.error("Under Cooldown!"));
+            player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 1, 1);
             return;
         }
 
-        event.setCancelled(true);
+        NamespacedKey storedKey = new NamespacedKey(this.weapons.main, "void_bundle_entity");
+
+        if (!Objects.equals(
+                item.getPersistentDataContainer().get(storedKey, PersistentDataType.STRING),
+                ""
+        )) {
+            player.sendMessage(TextSymbols.error("This void bundle already contains an entity!"));
+            return;
+        }
+
+        Entity target = event.getRightClicked();
+
+        if (!(target instanceof LivingEntity living)
+                || living instanceof Player
+                || living instanceof Boss
+                || living.getType() == EntityType.ARMOR_STAND
+                || BLACKLIST_VOID_BUNDLE.contains(target.getType())) {
+
+            player.sendMessage(TextSymbols.error("Cannot store this mob!"));
+            player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 1.0F, 1.0F);
+            return;
+        }
+
+        ReadWriteNBT nbt = NBT.parseNBT(Objects.requireNonNull(target.getAsString()));
+        nbt.removeKey("Paper.Origin");
+        nbt.removeKey("Paper.OriginWorld");
+        nbt.removeKey("Rotation");
+        nbt.removeKey("Motion");
+        nbt.removeKey("FallFlying");
+        nbt.removeKey("OnGround");
+        nbt.removeKey("FallDistance");
+        nbt.removeKey("PortalCooldown");
+        nbt.removeKey("Velocity");
+
+        ItemMeta meta = item.getItemMeta();
+        List<Component> lore = meta.lore();
+        if (lore == null) lore = new ArrayList<>();
+
+        String entityName = target.getName() + " (" + target.getType().getKey() + ")";
+        lore.set(7, Component.text(entityName, NamedTextColor.GRAY));
+        meta.lore(lore);
+        item.setItemMeta(meta);
+
+        item.editPersistentDataContainer(pdc ->
+                pdc.set(storedKey, PersistentDataType.STRING, nbt.toString())
+        );
+
+        target.getWorld().spawnParticle(
+                Particle.TRIAL_SPAWNER_DETECTION_OMINOUS,
+                target.getLocation(),
+                30, 0.3, 0.5, 0.3, 0.01
+        );
+
+        target.getWorld().playSound(target.getLocation(), Sound.ENTITY_ENDER_EYE_DEATH, 1, 1);
+        target.getWorld().playSound(target.getLocation(), Sound.ITEM_BUNDLE_INSERT, 1, 1);
+
+        target.remove();
+        player.setCooldown(Key.key("masworld", "void_bundle"), 80);
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)
-    public void void_bundle(PlayerInteractEvent event) {
+    public void onEntityAt(PlayerInteractAtEntityEvent event) {
+        if (event.getHand() != EquipmentSlot.HAND) return;
+
+        ItemStack item = event.getPlayer().getInventory().getItemInMainHand();
+        if (isVoidBundle(item)) {
+            event.setCancelled(true);
+        }
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST)
+    public void onVoidBundleUse(PlayerInteractEvent event) {
         Player player = event.getPlayer();
         ItemStack item = event.getItem();
-        if (item == null) return;
+        if (!isVoidBundle(item)) return;
 
-        ItemMeta meta = item.getItemMeta();
-        if (meta == null) return;
+        event.setCancelled(true);
 
-        NamespacedKey specialEffectKey = new NamespacedKey(this.weapons.main, "special_effect");
-        PersistentDataContainer container = meta.getPersistentDataContainer();
+        if (!event.getAction().isLeftClick()) return;
 
-        if (!"void_bundle".equals(container.get(specialEffectKey, PersistentDataType.STRING))) return;
-
-        if (!(player.getCooldown(Key.key("masworld", "void_bundle")) == 0)) {
+        if (player.getCooldown(Key.key("masworld", "void_bundle")) != 0) {
             player.sendMessage(TextSymbols.error("Under Cooldown!"));
             player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 1.0F, 1.0F);
             return;
         }
 
-        event.setCancelled(true);
+        NamespacedKey storedKey = new NamespacedKey(this.weapons.main, "void_bundle_entity");
 
-        NamespacedKey storedkey = new NamespacedKey(this.weapons.main, "void_bundle_entity");
+        String stored = item.getPersistentDataContainer()
+                .get(storedKey, PersistentDataType.STRING);
 
-        if (event.getAction().name().contains("RIGHT_CLICK")) {
-            if (!Objects.equals(item.getPersistentDataContainer().get(storedkey, PersistentDataType.STRING), "")) {
-                player.sendMessage(TextSymbols.error("This void bundle already contains an entity!"));
-                player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 1.0F, 1.0F);
-                return;
-            }
-
-            Entity target = player.getTargetEntity(5);
-
-            if (target == null) {
-                player.sendMessage(TextSymbols.error("Your not looking at a entity!"));
-                player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 1.0F, 1.0F);
-                return;
-            };
-
-            if (!(target instanceof LivingEntity living)
-                    || living instanceof Player
-                    || living instanceof Boss
-                    || living.getType() == EntityType.ARMOR_STAND
-                    || BLACKLIST_VOID_BUNDLE.contains(target.getType())) {
-
-                player.sendMessage(TextSymbols.error("Cannot store this mob!"));
-                player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 1.0F, 1.0F);
-                return;
-            }
-
-            ReadWriteNBT nbt = NBT.parseNBT(Objects.requireNonNull(target.getAsString()));
-            nbt.removeKey("Paper.Origin");
-            nbt.removeKey("Paper.OriginWorld");
-            nbt.removeKey("Rotation");
-            nbt.removeKey("Motion");
-            nbt.removeKey("FallFlying");
-            nbt.removeKey("OnGround");
-            nbt.removeKey("FallDistance");
-            nbt.removeKey("PortalCooldown");
-            nbt.removeKey("Velocity");
-
-            ItemMeta new_meta = item.getItemMeta();
-            if (new_meta == null) return;
-
-            List<Component> lore = meta.lore();
-            if (lore == null) lore = new ArrayList<>();
-
-            String entityName = target.getName() + " (" + target.getType().getKey() + ")";
-
-            lore.set(7, Component.text(entityName, NamedTextColor.GRAY));
-            new_meta.lore(lore);
-
-            item.setItemMeta(new_meta);
-
-            item.editPersistentDataContainer(pdc -> {
-                pdc.set(storedkey, PersistentDataType.STRING, nbt.toString());
-            });
-
-            target.getWorld().spawnParticle(Particle.TRIAL_SPAWNER_DETECTION_OMINOUS,
-                target.getX(),target.getY(),target.getZ(),
-                30,
-                0.3,0.5,0.3,
-                0.01
-            );
-
-            target.getWorld().playSound(target.getLocation(),Sound.ENTITY_ENDER_EYE_DEATH,1,1);
-            target.getWorld().playSound(target.getLocation(),Sound.ITEM_BUNDLE_INSERT,1,1);
-
-            target.remove();
-
-            player.setCooldown(Key.key("masworld", "void_bundle"), 80);
-        } else if (event.getAction().name().contains("LEFT_CLICK")) {
-            if (Objects.equals(item.getPersistentDataContainer().get(storedkey, PersistentDataType.STRING), "")) {
-                player.sendMessage(TextSymbols.error("This void bundle doesnt contain a entity!"));
-                player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 1.0F, 1.0F);
-                return;
-            }
-
-            ReadWriteNBT nbt = NBT.parseNBT(Objects.requireNonNull(item.getPersistentDataContainer().get(storedkey,PersistentDataType.STRING)));
-
-            EntityType type = RegistryAccess.registryAccess().getRegistry(RegistryKey.ENTITY_TYPE).get(Utils.parseNamespacedKey(nbt.getString("id")));
-
-            assert type != null;
-
-            Block targetBlock = player.getTargetBlockExact(5);
-            if (targetBlock == null) {
-                player.sendMessage(TextSymbols.error("You need to be pointing at a block to release your stored entity!"));
-                player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 1.0F, 1.0F);
-                return;
-            }
-
-            Block current = targetBlock;
-            Block airBlock = null;
-
-            for (int i = 0; i < 5; i++) {
-                current = current.getRelative(BlockFace.UP);
-
-                if (current.getType().isAir()) {
-                    airBlock = current;
-                    break;
-                }
-            }
-
-            if (airBlock == null) {
-                player.sendMessage(TextSymbols.error("No space above the block!"));
-                player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 1.0F, 1.0F);
-                return;
-            }
-
-            Entity entity = player.getWorld().spawnEntity(airBlock.getLocation(),type);
-
-            NBT.modify(entity, entity_nbt -> {
-                entity_nbt.mergeCompound(nbt);
-            });
-
-            entity.getWorld().spawnParticle(Particle.TRIAL_SPAWNER_DETECTION,
-                    entity.getX(),entity.getY(),entity.getZ(),
-                    30,
-                    0.3,0.5,0.3,
-                    0.01
-            );
-
-            entity.getWorld().playSound(entity.getLocation(),Sound.ENTITY_ENDER_EYE_DEATH,1,1);
-            entity.getWorld().playSound(entity.getLocation(),Sound.ITEM_BUNDLE_INSERT,1,1);
-
-            ItemMeta new_meta = item.getItemMeta();
-            if (new_meta == null) return;
-
-            List<Component> lore = meta.lore();
-            if (lore == null) lore = new ArrayList<>();
-
-            lore.set(7, Component.text("Nothing", NamedTextColor.GRAY));
-            new_meta.lore(lore);
-
-            item.setItemMeta(new_meta);
-
-            item.editPersistentDataContainer(pdc -> {
-                pdc.set(storedkey, PersistentDataType.STRING, "");
-            });
-
-            player.setCooldown(Key.key("masworld", "void_bundle"), 80);
+        if (stored == null || stored.isEmpty()) {
+            player.sendMessage(TextSymbols.error("This void bundle doesn't contain an entity!"));
+            player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 1.0F, 1.0F);
+            return;
         }
+
+        ReadWriteNBT nbt = NBT.parseNBT(stored);
+        EntityType type = RegistryAccess.registryAccess()
+                .getRegistry(RegistryKey.ENTITY_TYPE)
+                .get(Utils.parseNamespacedKey(nbt.getString("id")));
+
+        if (type == null) return;
+
+        Block block = player.getTargetBlockExact(5);
+        if (block == null) {
+            player.sendMessage(TextSymbols.error("You need to be pointing at a block!"));
+            player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 1.0F, 1.0F);
+            return;
+        }
+
+        Block spawn = null;
+        Block cur = block;
+        for (int i = 0; i < 5; i++) {
+            cur = cur.getRelative(BlockFace.UP);
+            if (cur.getType().isAir()) {
+                spawn = cur;
+                break;
+            }
+        }
+
+        if (spawn == null) {
+            player.sendMessage(TextSymbols.error("No space above the block!"));
+            player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 1.0F, 1.0F);
+            return;
+        }
+
+        Entity entity = player.getWorld().spawnEntity(spawn.getLocation(), type);
+        NBT.modify(entity, n -> {
+            n.mergeCompound(nbt);
+        });
+
+        entity.getWorld().spawnParticle(
+                Particle.TRIAL_SPAWNER_DETECTION,
+                entity.getLocation(),
+                30, 0.3, 0.5, 0.3, 0.01
+        );
+
+        entity.getWorld().playSound(entity.getLocation(), Sound.ENTITY_ENDER_EYE_DEATH, 1, 1);
+        entity.getWorld().playSound(entity.getLocation(), Sound.ITEM_BUNDLE_INSERT, 1, 1);
+
+        ItemMeta meta = item.getItemMeta();
+        List<Component> lore = meta.lore();
+        if (lore == null) lore = new ArrayList<>();
+        lore.set(7, Component.text("Nothing", NamedTextColor.GRAY));
+        meta.lore(lore);
+        item.setItemMeta(meta);
+
+        item.editPersistentDataContainer(pdc ->
+                pdc.set(storedKey, PersistentDataType.STRING, "")
+        );
+
+        player.setCooldown(Key.key("masworld", "void_bundle"), 80);
     }
 
     @EventHandler
@@ -1008,8 +987,8 @@ public class WeaponListeners implements Listener {
 
         event.setCancelled(true);
 
-        ItemStack voidBottle = CraftEngineItems
-                .byId(net.momirealms.craftengine.core.util.Key.of("masworldce", "void_bottle"))
+        ItemStack voidBottle = Objects.requireNonNull(CraftEngineItems
+                        .byId(net.momirealms.craftengine.core.util.Key.of("masworldce", "void_bottle")))
                 .buildItemStack()
                 .clone();
 
