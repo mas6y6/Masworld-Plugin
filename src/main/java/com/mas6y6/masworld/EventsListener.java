@@ -30,7 +30,7 @@ import org.bukkit.loot.LootTable;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.Nullable;
-import com.mas6y6.masworld.Items.GetAdminStick.GetAdminStick;
+import com.mas6y6.masworld.Items.GetAdminStick;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.inventory.meta.ItemMeta;
