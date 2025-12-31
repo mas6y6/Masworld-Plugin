@@ -1,5 +1,6 @@
 package com.mas6y6.masworld.Items;
 
+import org.bukkit.NamespacedKey;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.ItemType;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -16,7 +17,7 @@ import java.lang.*;
 import com.mas6y6.masworld.Items.Attributes.Utils.SetWeaponDamage;
 
 public class GetAdminStick {
-    public ItemStack adminStick() {
+    public static ItemStack adminStick() {
         String adminStickName = "Admin Stick";
         ItemStack _adminStick = ItemType.STICK.createItemStack();
         _adminStick.setAmount(1);

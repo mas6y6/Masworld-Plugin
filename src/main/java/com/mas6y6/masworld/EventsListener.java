@@ -2,11 +2,11 @@ package com.mas6y6.masworld;
 
 import com.mas6y6.masworld.Objects.CraftEngineUtils;
 import com.mas6y6.masworld.Objects.Utils;
+import net.kyori.adventure.key.Key;
 import net.momirealms.craftengine.bukkit.api.CraftEngineBlocks;
 import net.momirealms.craftengine.bukkit.api.CraftEngineItems;
 import net.momirealms.craftengine.core.block.ImmutableBlockState;
 import net.momirealms.craftengine.core.item.CustomItem;
-import net.momirealms.craftengine.core.util.Key;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.block.Barrel;
@@ -38,6 +38,7 @@ import org.bukkit.attribute.AttributeInstance;
 import org.bukkit.attribute.AttributeModifier;
 import org.bukkit.attribute.Attribute;
 
+import javax.naming.Name;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
@@ -82,29 +83,37 @@ public class EventsListener implements Listener {
         }
     }
 
-    private final AttributeModifier reachBonus = new AttributeModifier(
-        UUID.fromString("432ce1b3-a8b8-4151-baeb-09fb9efd9698"),
-        "extra_reach", 100.0, AttributeModifier.Operation.ADD_NUMBER
-    );
-    
     @EventHandler
     public void onAdminStickEquipped(PlayerItemHeldEvent event) {
         Player player = event.getPlayer();
-        ItemStack adminstick = GetAdminStick.adminStick();
+        ItemStack adminStick = GetAdminStick.adminStick();
         ItemStack hand = player.getInventory().getItemInMainHand();
-        ItemMeta handIM = hand.getItemMeta();
-        NamespacedKey key = new NamespacedKey("masworld", "adminstick_id");
-        PersistentDataContainer handIM_PDC = handIM.getPersistentDataContainer();
-        AttributeInstance rangeattr = player.getAttribute(Attribute.ENTITY_INTERACTION_RANGE);
-        if (hand != null &&  hand.getType() != Material.AIR) {
-            if (hand.getType() == adminstick.getType() && handIM_PDC.has(key, PersistentDataType.STRING)) {
-                if (handIM_PDC.get(key, PersistentDataType.STRING) == "1040196" && rangeattr.getModifier(reachBonus.getUniqueId()) == null) {
-                    rangeattr.addModifier(reachBonus);
-                }
+
+        AttributeInstance rangeAttr = player.getAttribute(Attribute.ENTITY_INTERACTION_RANGE);
+        if (rangeAttr == null) return;
+
+        Key reachKey = Key.key("masworld", "adminstick");
+        NamespacedKey reachKey_nk = new NamespacedKey("masworld", "adminstick");
+        AttributeModifier reachBonus = new AttributeModifier(reachKey_nk, 100.0, AttributeModifier.Operation.ADD_NUMBER);
+
+        // Remove modifier if player is not holding the admin stick
+        boolean holdingAdminStick = false;
+        if (hand != null && hand.getType() == adminStick.getType()) {
+            ItemMeta handIM = hand.getItemMeta();
+            if (handIM != null) {
+                NamespacedKey idKey = new NamespacedKey("masworld", "adminstick_id");
+                PersistentDataContainer handPDC = handIM.getPersistentDataContainer();
+                holdingAdminStick = "1040196".equals(handPDC.get(idKey, PersistentDataType.STRING));
+            }
+        }
+
+        if (holdingAdminStick) {
+            if (rangeAttr.getModifier(reachKey) == null) {
+                rangeAttr.addModifier(reachBonus);
             }
         } else {
-            if (rangeattr.getModifier(reachBonus.getUniqueId()) != null) {
-                rangeattr.removeModifier(reachBonus.getUniqueId());
+            if (rangeAttr.getModifier(reachKey) != null) {
+                rangeAttr.removeModifier(reachKey);
             }
         }
     }

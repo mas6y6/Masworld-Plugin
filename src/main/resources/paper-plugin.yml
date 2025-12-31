@@ -1,5 +1,5 @@
 name: masworld
-version: '1.20.4'
+version: '1.20.5'
 main: com.mas6y6.masworld.Masworld
 api-version: '1.21'
 description: Masworld SMP Custom Item Handler Plugin
