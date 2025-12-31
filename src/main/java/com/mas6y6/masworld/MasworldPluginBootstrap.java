@@ -66,7 +66,7 @@ public class MasworldPluginBootstrap implements PluginBootstrap {
            event.registry().register(
                    SHOCKER_KEY,
                    builder -> builder.description(Utils.createEnchantmentComponent("\uefe5", TextColor.color(0x008efa),"Shocker"))
-                           .supportedItems(event.getOrCreateTag(ItemTypeTagKeys.ENCHANTABLE_SWORD))
+                           .supportedItems(event.getOrCreateTag(ItemTypeTagKeys.ENCHANTABLE_MELEE_WEAPON))
                            .anvilCost(7)
                            .maxLevel(1)
                            .weight(1)
