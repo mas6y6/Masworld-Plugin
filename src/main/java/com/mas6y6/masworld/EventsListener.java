@@ -35,10 +35,12 @@ import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.attribute.AttributeInstance;
+import org.bukkit.attribute.AttributeModifier;
 import org.bukkit.attribute.Attribute;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.UUID;
 
 public class EventsListener implements Listener {
     public Masworld masworld;
@@ -79,7 +81,12 @@ public class EventsListener implements Listener {
             loot.set(i, newItem);
         }
     }
-    /*
+
+    private final AttributeModifier reachBonus = new AttributeModifier(
+        UUID.fromString("432ce1b3-a8b8-4151-baeb-09fb9efd9698"),
+        "extra_reach", 100.0, AttributeModifier.Operation.ADD_NUMBER
+    );
+    
     @EventHandler
     public void onAdminStickEquipped(PlayerItemHeldEvent event) {
         Player player = event.getPlayer();
@@ -88,11 +95,17 @@ public class EventsListener implements Listener {
         ItemMeta handIM = hand.getItemMeta();
         NamespacedKey key = new NamespacedKey("masworld", "adminstick_id");
         PersistentDataContainer handIM_PDC = handIM.getPersistentDataContainer();
+        AttributeInstance rangeattr = player.getAttribute(Attribute.ENTITY_INTERACTION_RANGE);
         if (hand != null &&  hand.getType() != Material.AIR) {
             if (hand.getType() == adminstick.getType() && handIM_PDC.has(key, PersistentDataType.STRING)) {
-                handIM.setAttackRange();
+                if (handIM_PDC.get(key, PersistentDataType.STRING) == "1040196" && rangeattr.getModifier(reachBonus.getUniqueId()) == null) {
+                    rangeattr.addModifier(reachBonus);
+                }
+            }
+        } else {
+            if (rangeattr.getModifier(reachBonus.getUniqueId()) != null) {
+                rangeattr.removeModifier(reachBonus.getUniqueId());
             }
         }
     }
-    */
 }
