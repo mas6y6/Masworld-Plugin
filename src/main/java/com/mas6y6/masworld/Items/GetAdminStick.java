@@ -9,7 +9,6 @@ import org.bukkit.persistence.PersistentDataType;
 //import org.bukkit.inventory.meta.components.AttackRangeComponent;
 //import io.papermc.paper.datacomponent.DataComponentType;
 import io.papermc.paper.datacomponent.DataComponentTypes;
-import io.papermc.paper.datacomponent.item.AttackRange;
 import java.lang.*;
 
 import com.mas6y6.masworld.Items.Attributes.Utils.SetWeaponDamage;
@@ -20,25 +19,6 @@ public class GetAdminStick {
         ItemStack _adminStick = ItemType.STICK.createItemStack();
         _adminStick.setAmount(1);
         ItemMeta adminStickIM = _adminStick.getItemMeta();
-        //NamespacedKey key = new NamespacedKey("masworld", "adminstick_id");
-        NamespacedKey key = new NamespacedKey("masworld", "adminstick")
-        PersistentDataContainer container = adminStickIM.getPersistentDataContainer();
-        container.set(key, PersistentDataType.BOOLEAN, true);
-        /*
-        AttackRangeComponent adminStickIM_AR = adminStickIM.getAttackRange();
-        if (adminStickIM_AR == null) {
-            adminStickIM_AR = adminStickIM.getComponents().getAttackRange();
-        }
-        adminStickIM_AR.setValue(100);
-        adminStickIM.setAttackRange(adminStickIM_AR);
-        */
-        AttackRange adminstickrange = AttackRange.attackRange()
-            .minReach(1.0f)
-            .maxReach(10.0f)
-            .minCreativeReach(0.5f)
-            .maxCreativeReach(100.0f)
-            .build();
-        _adminstick.setData(DataComponentTypes.ATTACK_RANGE, adminstickrange);
         adminStickIM.setDisplayName(adminStickName);
         adminStickIM.setUnbreakable(true);
         adminStickIM.addEnchant(Enchantment.CHANNELING, 1, true);
